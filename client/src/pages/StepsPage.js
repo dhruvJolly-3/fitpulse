@@ -8,40 +8,53 @@ const today = format(new Date(), 'yyyy-MM-dd');
 export default function StepsPage() {
   const { user } = useAuth();
   const [log, setLog] = useState(null);
+  // ─── FIX: form stores raw strings, never a prefilled number ───
   const [form, setForm] = useState({ steps: '', distance: '', caloriesBurnt: '', activeMinutes: '' });
   const [saving, setSaving] = useState(false);
   const [weekData, setWeekData] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  // ─── FIX: track which fields were manually edited by user ───
+  const [manualFields, setManualFields] = useState({ distance: false, caloriesBurnt: false });
 
   const target = user?.stepTarget || 10000;
 
   useEffect(() => {
-    api.get(`/steps/${today}`).then(r => { setLog(r.data); if (r.data?.steps > 0) setEditMode(false); }).catch(() => {});
+    api.get(`/steps/${today}`)
+      .then(r => { setLog(r.data); if (r.data?.steps > 0) setEditMode(false); })
+      .catch(() => {});
     const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    api.get(`/steps/history/week?startDate=${start}`).then(r => {
-      const data = Array.from({ length: 7 }, (_, i) => {
-        const d = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
-        const found = r.data.find(l => l.date === d);
-        return { day: format(subDays(new Date(), 6 - i), 'EEE'), steps: found?.steps || 0 };
-      });
-      setWeekData(data);
-    }).catch(() => {});
+    api.get(`/steps/history/week?startDate=${start}`)
+      .then(r => {
+        const data = Array.from({ length: 7 }, (_, i) => {
+          const d = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
+          const found = r.data.find(l => l.date === d);
+          return { day: format(subDays(new Date(), 6 - i), 'EEE'), steps: found?.steps || 0 };
+        });
+        setWeekData(data);
+      })
+      .catch(() => {});
   }, []);
 
-  // Auto-calculate distance and calories from steps
   const autoCalc = (steps) => {
     const s = parseInt(steps) || 0;
     return {
-      distance: (s * 0.762 / 1000).toFixed(2), // avg stride ~76.2cm
-      caloriesBurnt: Math.round(s * 0.04),       // ~0.04 cal/step avg
-      activeMinutes: Math.round(s / 100)          // rough estimate
+      distance: s > 0 ? (s * 0.762 / 1000).toFixed(2) : '',
+      caloriesBurnt: s > 0 ? String(Math.round(s * 0.04)) : '',
+      activeMinutes: s > 0 ? String(Math.round(s / 100)) : '',
     };
   };
 
+  // ─── FIX: steps input handler — no prepended zeros, clean value ───
   const handleStepsChange = (e) => {
-    const s = e.target.value;
-    const calc = autoCalc(s);
-    setForm(p => ({ ...p, steps: s, ...calc }));
+    // Remove leading zeros: "06000" → "6000"
+    const raw = e.target.value.replace(/^0+(?=\d)/, '');
+    const calc = autoCalc(raw);
+    setForm(prev => ({
+      steps: raw,
+      distance: manualFields.distance ? prev.distance : calc.distance,
+      caloriesBurnt: manualFields.caloriesBurnt ? prev.caloriesBurnt : calc.caloriesBurnt,
+      activeMinutes: calc.activeMinutes,
+    }));
   };
 
   const saveSteps = async () => {
@@ -49,13 +62,14 @@ export default function StepsPage() {
     try {
       const { data } = await api.post('/steps', {
         date: today,
-        steps: +form.steps,
-        distance: +form.distance,
-        caloriesBurnt: +form.caloriesBurnt,
-        activeMinutes: +form.activeMinutes,
+        steps: parseInt(form.steps) || 0,
+        distance: parseFloat(form.distance) || 0,
+        caloriesBurnt: parseInt(form.caloriesBurnt) || 0,
+        activeMinutes: parseInt(form.activeMinutes) || 0,
       });
       setLog(data);
       setEditMode(false);
+      setManualFields({ distance: false, caloriesBurnt: false });
     } catch (e) { console.error(e); }
     setSaving(false);
   };
@@ -73,12 +87,20 @@ export default function StepsPage() {
       </div>
 
       <div className="page-body">
-        {/* Big step count */}
-        <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg, rgba(46,217,195,0.1), rgba(181,242,61,0.05))', borderColor: 'rgba(46,217,195,0.25)', padding: '28px 24px' }}>
+        {/* Big step count hero */}
+        <div className="card" style={{
+          marginBottom: 16,
+          background: 'linear-gradient(135deg, rgba(46,217,195,0.1), rgba(181,242,61,0.05))',
+          borderColor: 'rgba(46,217,195,0.25)',
+          padding: '28px 24px',
+        }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div className="card-title">Steps Today</div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.05em', color: 'var(--teal)', lineHeight: 1 }}>
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: '3.5rem', fontWeight: 800,
+                letterSpacing: '-0.05em', color: 'var(--teal)', lineHeight: 1,
+              }}>
                 {steps.toLocaleString()}
               </div>
               <div style={{ color: 'var(--text-3)', fontSize: '0.85rem', marginTop: 6 }}>
@@ -86,21 +108,21 @@ export default function StepsPage() {
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              {/* Circular progress */}
               <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg-raised)" strokeWidth="8"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg-raised)" strokeWidth="8" />
                 <circle cx="50" cy="50" r="42" fill="none" stroke="var(--teal)" strokeWidth="8"
-                  strokeDasharray={2 * Math.PI * 42} strokeDashoffset={2 * Math.PI * 42 * (1 - pct / 100)}
-                  strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }}/>
-                <text x="50" y="54" textAnchor="middle" style={{ transform: 'rotate(90deg) translateX(0px) translateY(-100px)' }} />
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={2 * Math.PI * 42 * (1 - pct / 100)}
+                  strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
               </svg>
-              <div style={{ marginTop: -88, marginBottom: 16, textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', color: 'var(--teal)' }}>
+              <div style={{
+                marginTop: -88, marginBottom: 16, textAlign: 'center',
+                fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', color: 'var(--teal)',
+              }}>
                 {Math.round(pct)}%
               </div>
             </div>
           </div>
-
-          {/* Progress bar */}
           <div style={{ height: 6, background: 'var(--bg-raised)', borderRadius: 3, overflow: 'hidden', marginTop: 8 }}>
             <div style={{ height: '100%', width: `${pct}%`, background: 'var(--teal)', borderRadius: 3, transition: 'width 0.8s ease' }} />
           </div>
@@ -110,7 +132,10 @@ export default function StepsPage() {
         <div className="grid-3" style={{ marginBottom: 16 }}>
           <div className="metric-tile">
             <span className="label">Distance</span>
-            <span className="value" style={{ fontSize: '1.8rem', color: 'var(--accent2)' }}>{distance.toFixed ? distance.toFixed(1) : distance}<span style={{ fontSize: '0.9rem' }}>km</span></span>
+            <span className="value" style={{ fontSize: '1.8rem', color: 'var(--accent2)' }}>
+              {typeof distance === 'number' ? distance.toFixed(1) : distance}
+              <span style={{ fontSize: '0.9rem' }}>km</span>
+            </span>
             <span className="subtext">walked today</span>
           </div>
           <div className="metric-tile">
@@ -129,23 +154,100 @@ export default function StepsPage() {
         {(!log?.steps || editMode) && (
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-title">Log Steps Manually</div>
+
+            {/* ─── FIX: Step Count input — clean placeholder, no leading zeros ─── */}
             <div className="form-group">
               <label className="form-label">Step Count</label>
-              <input type="number" placeholder="0" value={form.steps} onChange={handleStepsChange} />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  placeholder="e.g. 8000"
+                  value={form.steps}
+                  onChange={handleStepsChange}
+                  // ─── FIX: select-all on focus so user doesn't get "0|6000" ───
+                  onFocus={e => e.target.select()}
+                  style={{ paddingRight: 80 }}
+                />
+                {/* ─── contextual hint inside field ─── */}
+                {!form.steps && (
+                  <span style={{
+                    position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                    fontSize: '0.72rem', color: 'var(--text-3)', pointerEvents: 'none',
+                  }}>
+                    steps
+                  </span>
+                )}
+              </div>
+              {/* ─── FIX: helper text below field ─── */}
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: 2 }}>
+                Distance &amp; calories will auto-calculate
+              </span>
             </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Distance (km)</label>
-                <input type="number" step="0.01" placeholder="Auto" value={form.distance} onChange={e => setForm(p => ({ ...p, distance: e.target.value }))} />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    // ─── FIX: placeholder shows expected unit + hint ───
+                    placeholder={form.steps ? `~${autoCalc(form.steps).distance} km` : 'Auto-calculated'}
+                    value={form.distance}
+                    onFocus={e => e.target.select()}
+                    onChange={e => {
+                      setManualFields(p => ({ ...p, distance: true }));
+                      setForm(p => ({ ...p, distance: e.target.value }));
+                    }}
+                  />
+                  {!form.distance && (
+                    <span style={{
+                      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                      fontSize: '0.72rem', color: 'var(--text-3)', pointerEvents: 'none',
+                    }}>km</span>
+                  )}
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Calories Burnt</label>
-                <input type="number" placeholder="Auto" value={form.caloriesBurnt} onChange={e => setForm(p => ({ ...p, caloriesBurnt: e.target.value }))} />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={form.steps ? `~${autoCalc(form.steps).caloriesBurnt} kcal` : 'Auto-calculated'}
+                    value={form.caloriesBurnt}
+                    onFocus={e => e.target.select()}
+                    onChange={e => {
+                      setManualFields(p => ({ ...p, caloriesBurnt: true }));
+                      setForm(p => ({ ...p, caloriesBurnt: e.target.value }));
+                    }}
+                  />
+                  {!form.caloriesBurnt && (
+                    <span style={{
+                      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                      fontSize: '0.72rem', color: 'var(--text-3)', pointerEvents: 'none',
+                    }}>kcal</span>
+                  )}
+                </div>
               </div>
             </div>
+
             <div style={{ display: 'flex', gap: 10 }}>
-              {editMode && <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setEditMode(false)}>Cancel</button>}
-              <button className="btn btn-primary" style={{ flex: 2 }} onClick={saveSteps} disabled={saving || !form.steps}>
+              {editMode && (
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => {
+                  setEditMode(false);
+                  setManualFields({ distance: false, caloriesBurnt: false });
+                }}>Cancel</button>
+              )}
+              <button
+                className="btn btn-primary"
+                style={{ flex: 2 }}
+                onClick={saveSteps}
+                disabled={saving || !form.steps || parseInt(form.steps) <= 0}
+              >
                 {saving ? 'Saving…' : '💾 Save Steps'}
               </button>
             </div>
@@ -153,7 +255,19 @@ export default function StepsPage() {
         )}
 
         {log?.steps > 0 && !editMode && (
-          <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16 }} onClick={() => { setEditMode(true); setForm({ steps: log.steps, distance: log.distance, caloriesBurnt: log.caloriesBurnt, activeMinutes: log.activeMinutes }); }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            style={{ marginBottom: 16 }}
+            onClick={() => {
+              setEditMode(true);
+              setForm({
+                steps: String(log.steps),
+                distance: String(log.distance || ''),
+                caloriesBurnt: String(log.caloriesBurnt || ''),
+                activeMinutes: String(log.activeMinutes || ''),
+              });
+            }}
+          >
             ✏️ Edit Today's Steps
           </button>
         )}
@@ -165,8 +279,11 @@ export default function StepsPage() {
             <BarChart data={weekData} barCategoryGap="30%">
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
               <YAxis hide />
-              <Tooltip contentStyle={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }} formatter={v => [v.toLocaleString(), 'Steps']} />
-              <Bar dataKey="steps" radius={[4,4,0,0]}>
+              <Tooltip
+                contentStyle={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                formatter={v => [v.toLocaleString(), 'Steps']}
+              />
+              <Bar dataKey="steps" radius={[4, 4, 0, 0]}>
                 {weekData.map((d, i) => (
                   <Cell key={i} fill={d.steps >= target ? '#2ed9c3' : '#2ed9c355'} />
                 ))}
@@ -176,16 +293,19 @@ export default function StepsPage() {
         </div>
 
         {/* Apple Health */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(255,45,85,0.08), rgba(46,217,195,0.08))', borderColor: 'rgba(46,217,195,0.25)' }}>
+        <div className="card" style={{
+          background: 'linear-gradient(135deg, rgba(255,45,85,0.08), rgba(46,217,195,0.08))',
+          borderColor: 'rgba(46,217,195,0.25)',
+        }}>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
             <span style={{ fontSize: '1.8rem' }}>📱</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>Apple Fitness Integration</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-2)', marginBottom: 10 }}>
-                Sync steps, workouts, and calories from your iPhone 17's Motion Coprocessor and Apple Watch.
+                Sync steps, workouts, and calories from your iPhone's Motion Coprocessor and Apple Watch.
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', background: 'var(--bg-raised)', padding: '8px 12px', borderRadius: 'var(--r-sm)', lineHeight: 1.6 }}>
-                iOS: Settings → Privacy → Motion & Fitness → Enable FitPulse<br/>
+                iOS: Settings → Privacy → Motion & Fitness → Enable FitPulse<br />
                 Then: Health App → Sources → FitPulse → Allow All
               </div>
             </div>
