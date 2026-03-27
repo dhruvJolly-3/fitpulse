@@ -5,7 +5,7 @@ const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
-const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || '/api' });
+const api = axios.create({ baseURL: 'https://fitpulse-production-3645.up.railway.app/api' });
 
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('fp_token');
