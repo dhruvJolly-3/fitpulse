@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const exerciseSchema = new mongoose.Schema({
   name: String,
-  category: { type: String, enum: ['strength', 'cardio', 'flexibility', 'hiit', 'yoga', 'sports'] },
+  category: { type: String, enum: ['strength', 'cardio', 'flexibility', 'hiit', 'yoga', 'sports', 'push', 'pull', 'legs', 'core'] },
   sets: Number,
   reps: Number,
   weight: Number, // kg
