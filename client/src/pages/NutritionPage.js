@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { format, subDays, addDays } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useAuth, api } from '../context/AuthContext';
+import Ring from '../components/Ring';
+import WeekBars from '../components/WeekBars';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
 const MEAL_ICONS = { breakfast: '☀️', lunch: '🌤️', dinner: '🌙', snack: '🍎', pre_workout: '⚡', post_workout: '💪' };
@@ -83,156 +84,154 @@ export default function NutritionPage() {
     foods: (log?.foods || []).filter(f => f.mealType === mt)
   })).filter(g => g.foods.length > 0 || showAdd);
 
+  const isToday = date === format(new Date(), 'yyyy-MM-dd');
+  const pct = (cur, max) => `${Math.min(max > 0 ? cur / max * 100 : 0, 100)}%`;
+  const macros = [
+    { label: 'Protein', cur: totals.protein, max: user?.macroTargets?.protein || 150, color: 'var(--matcha-2)', bar: 'lime' },
+    { label: 'Carbohydrates', cur: totals.carbs, max: user?.macroTargets?.carbs || 250, color: 'var(--ink)', bar: 'ink' },
+    { label: 'Fat', cur: totals.fat, max: user?.macroTargets?.fat || 65, color: 'var(--coral)', bar: '' },
+    { label: 'Fiber', cur: totals.fiber || 0, max: 30, color: 'var(--ink-30)', bar: 'ink' },
+  ];
+
   return (
     <div className="fade-up">
-      <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h1 className="page-title">Nutrition</h1>
-            <p className="page-subtitle">Track every bite, hit your macros</p>
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Log Food</button>
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Nutrition</h1>
+          <div className="page-date">track every bite, hit your macros</div>
         </div>
-      </div>
+        <div className="page-actions">
+          <button className="icon-btn bordered" onClick={() => setDate(format(subDays(new Date(date), 1), 'yyyy-MM-dd'))} title="Previous day">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span className="mono" style={{ fontSize: 13, fontWeight: 700, minWidth: 92, textAlign: 'center' }}>
+            {isToday ? 'Today' : format(new Date(date + 'T12:00:00'), 'EEE, MMM d')}
+          </span>
+          <button className="icon-btn bordered" onClick={() => setDate(format(addDays(new Date(date), 1), 'yyyy-MM-dd'))}
+            disabled={date >= format(new Date(), 'yyyy-MM-dd')} title="Next day">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button className="btn primary" onClick={() => setShowAdd(true)}>+ Log food</button>
+        </div>
+      </header>
 
       <div className="page-body">
-        {/* Date navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <button className="btn btn-ghost btn-icon" onClick={() => setDate(format(subDays(new Date(date), 1), 'yyyy-MM-dd'))}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.95rem' }}>
-            {date === format(new Date(), 'yyyy-MM-dd') ? 'Today' : format(new Date(date + 'T12:00:00'), 'EEE, MMM d')}
-          </span>
-          <button className="btn btn-ghost btn-icon" onClick={() => setDate(format(addDays(new Date(date), 1), 'yyyy-MM-dd'))}
-            disabled={date >= format(new Date(), 'yyyy-MM-dd')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        {/* Summary bar */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
-          {[
-            { label: 'Consumed', val: Math.round(totals.calories), unit: 'kcal', color: 'var(--accent)' },
-            { label: 'Remaining', val: Math.round(remaining), unit: 'kcal', color: remaining < 0 ? 'var(--red)' : 'var(--text)' },
-            { label: 'Protein', val: Math.round(totals.protein), unit: 'g', color: 'var(--accent2)' },
-            { label: 'Carbs', val: Math.round(totals.carbs), unit: 'g', color: 'var(--orange)' },
-          ].map(s => (
-            <div key={s.label} className="metric-tile">
-              <span className="label">{s.label}</span>
-              <span className="value" style={{ fontSize: '1.6rem', color: s.color }}>{s.val}</span>
-              <span className="subtext">{s.unit}</span>
+        <div className="grid g-12">
+          {/* Calories ring */}
+          <div className="card lime span-4 ring-card">
+            <Ring value={totals.calories} max={calTarget}>
+              <div className="big">{Math.round(totals.calories)}</div>
+              <div className="sub">of {calTarget.toLocaleString()} kcal</div>
+            </Ring>
+            <div className="ring-foot">
+              {remaining >= 0
+                ? <><b>{Math.round(remaining)} kcal</b> left</>
+                : <><b style={{ color: 'var(--coral)' }}>{Math.round(-remaining)} kcal</b> over</>}
             </div>
-          ))}
-        </div>
-
-        {/* Macro progress */}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-title">Macro Breakdown</div>
-          <div className="macro-bar-wrap">
-            {[
-              { label: 'Protein', cur: totals.protein, max: user?.macroTargets?.protein || 150, color: '#5b8eff' },
-              { label: 'Carbohydrates', cur: totals.carbs, max: user?.macroTargets?.carbs || 250, color: '#b5f23d' },
-              { label: 'Fat', cur: totals.fat, max: user?.macroTargets?.fat || 65, color: '#ff9f43' },
-              { label: 'Fiber', cur: totals.fiber || 0, max: 30, color: '#2ed9c3' },
-            ].map(m => (
-              <div key={m.label} className="macro-bar">
-                <div className="macro-bar-header">
-                  <span className="mname">{m.label}</span>
-                  <span className="mval">{Math.round(m.cur)}g / {m.max}g</span>
-                </div>
-                <div className="macro-track">
-                  <div className="macro-fill" style={{ width: `${Math.min(m.cur / m.max * 100, 100)}%`, background: m.color }} />
-                </div>
-              </div>
-            ))}
           </div>
-        </div>
 
-        {/* Weekly chart */}
-        {weekData.length > 0 && (
-          <div className="card" style={{ marginBottom: 16 }}>
-            <div className="card-title">7-Day Calories</div>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={weekData} barCategoryGap="30%">
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <Tooltip contentStyle={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }} />
-                <ReferenceLine y={calTarget} stroke="var(--accent)" strokeDasharray="3 3" strokeOpacity={0.5} />
-                <Bar dataKey="cals" fill="var(--accent)" radius={[4, 4, 0, 0]} opacity={0.8} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Meal logs */}
-        {MEAL_TYPES.map(mt => {
-          const foods = (log?.foods || []).filter(f => f.mealType === mt);
-          const mealCals = foods.reduce((s, f) => s + (f.calories || 0), 0);
-          if (foods.length === 0) return null;
-          return (
-            <div key={mt} className="card" style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '1.1rem' }}>{MEAL_ICONS[mt]}</span>
-                  <span style={{ fontWeight: 700, textTransform: 'capitalize', fontSize: '0.9rem' }}>{mt.replace('_', ' ')}</span>
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--accent)' }}>{Math.round(mealCals)} kcal</span>
-              </div>
-              {foods.map(f => (
-                <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{f.name}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>P: {Math.round(f.protein)}g · C: {Math.round(f.carbs)}g · F: {Math.round(f.fat)}g</div>
+          {/* Macro split */}
+          <div className="card span-8">
+            <div className="card-h"><h3>Macro split</h3><span className="pill out">vs target</span></div>
+            <div className="legend">
+              {macros.map(m => (
+                <React.Fragment key={m.label}>
+                  <div className="row">
+                    <span className="sw" style={{ background: m.color }} />{m.label}
+                    <b>{Math.round(m.cur)} / {m.max}g</b>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--text-2)' }}>{Math.round(f.calories)} kcal</span>
-                    <button className="btn btn-ghost btn-icon" onClick={() => removeFood(f._id)} style={{ color: 'var(--text-3)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                    </button>
-                  </div>
-                </div>
+                  <div className={`bar ${m.bar}`}><i style={{ width: pct(m.cur, m.max), background: m.label === 'Fiber' ? 'var(--ink-30)' : undefined }} /></div>
+                </React.Fragment>
               ))}
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => { setMealType(mt); setShowAdd(true); }}>
-                + Add to {mt.replace('_', ' ')}
-              </button>
             </div>
-          );
-        })}
-
-        {(log?.foods?.length === 0 || !log) && (
-          <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '2rem', marginBottom: 12 }}>🍽️</div>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>No meals logged yet</div>
-            <div style={{ fontSize: '0.83rem', color: 'var(--text-3)', marginBottom: 20 }}>Start tracking to hit your {calTarget} kcal goal</div>
-            <button className="btn btn-primary" onClick={() => setShowAdd(true)}>Log Your First Meal</button>
           </div>
-        )}
+        </div>
+
+        <div className="grid g-12">
+          {/* Meals */}
+          <div className="card span-7">
+            <div className="card-h">
+              <h3>{isToday ? "Today's meals" : 'Meals'}</h3>
+              <span className="label">{log?.foods?.length || 0} logged</span>
+            </div>
+
+            {MEAL_TYPES.map(mt => {
+              const foods = (log?.foods || []).filter(f => f.mealType === mt);
+              const mealCals = foods.reduce((s, f) => s + (f.calories || 0), 0);
+              if (foods.length === 0) return null;
+              return (
+                <div key={mt} className="meal-block">
+                  <div className="mh">
+                    <span className="nm">{MEAL_ICONS[mt]} {mt.replace('_', ' ')}</span>
+                    <span className="kc">{Math.round(mealCals)} kcal</span>
+                  </div>
+                  {foods.map(f => (
+                    <div key={f._id} className="line-item">
+                      <div>
+                        <div className="t" style={{ fontWeight: 500 }}>{f.name}</div>
+                        <div className="s mono">P {Math.round(f.protein)}g · C {Math.round(f.carbs)}g · F {Math.round(f.fat)}g</div>
+                      </div>
+                      <div className="end">
+                        <span className="kc">{Math.round(f.calories)}</span>
+                        <button className="icon-btn" onClick={() => removeFood(f._id)} title="Remove">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={() => { setMealType(mt); setShowAdd(true); }}>
+                    + Add to {mt.replace('_', ' ')}
+                  </button>
+                </div>
+              );
+            })}
+
+            {(log?.foods?.length === 0 || !log) && (
+              <div className="empty">
+                <div className="ic">🍽️</div>
+                <h3>No meals logged <span className="serif-it">yet</span></h3>
+                <p>Start tracking to hit your {calTarget} kcal goal.</p>
+                <button className="btn primary" onClick={() => setShowAdd(true)}>Log your first meal</button>
+              </div>
+            )}
+          </div>
+
+          {/* Weekly chart */}
+          {weekData.length > 0 && (
+            <div className="card span-5">
+              <div className="card-h"><h3>7-day calories</h3><span className="label">target {calTarget}</span></div>
+              <WeekBars data={weekData} xKey="date" yKey="cals" label="Calories" target={calTarget} colorByTarget={false}
+                isToday={d => d.date === format(new Date(), 'MM-dd')} format={v => `${Math.round(v)} kcal`} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Food Modal */}
       {showAdd && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowAdd(false)}>
           <div className="modal">
-            <div className="modal-handle" />
-            <div className="modal-title">Log Food</div>
+            <div className="modal-head">
+              <div className="modal-title">Log <span className="serif-it">food</span></div>
+              <button className="icon-btn" onClick={() => setShowAdd(false)} title="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
 
             {/* Meal type selector */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div className="chips" style={{ marginBottom: 16 }}>
               {MEAL_TYPES.map(mt => (
-                <button key={mt} onClick={() => setMealType(mt)}
-                  style={{ padding: '5px 12px', borderRadius: 'var(--r-pill)', border: `1px solid ${mealType === mt ? 'var(--accent)' : 'var(--border)'}`, background: mealType === mt ? 'var(--accent-dim)' : 'transparent', color: mealType === mt ? 'var(--accent)' : 'var(--text-3)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                <button key={mt} className={`chip ${mealType === mt ? 'on' : ''}`} onClick={() => setMealType(mt)}>
                   {MEAL_ICONS[mt]} {mt.replace('_', ' ')}
                 </button>
               ))}
             </div>
 
             {/* Mode toggle */}
-            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-raised)', borderRadius: 'var(--r-md)', padding: 4, marginBottom: 16 }}>
+            <div className="seg" style={{ marginBottom: 16 }}>
               {['search', 'custom'].map(m => (
-                <button key={m} onClick={() => setAddMode(m)}
-                  style={{ flex: 1, padding: '7px', borderRadius: 'calc(var(--r-md) - 2px)', background: addMode === m ? 'var(--bg-card)' : 'transparent', color: addMode === m ? 'var(--text)' : 'var(--text-3)', fontWeight: 600, fontSize: '0.82rem', border: addMode === m ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
-                  {m === 'search' ? '🔍 Search Foods' : '✏️ Custom Entry'}
+                <button key={m} className={addMode === m ? 'on' : ''} onClick={() => setAddMode(m)}>
+                  {m === 'search' ? 'Search foods' : 'Custom entry'}
                 </button>
               ))}
             </div>
@@ -240,48 +239,45 @@ export default function NutritionPage() {
             {addMode === 'search' ? (
               <>
                 <input placeholder="Search foods…" value={search} onChange={e => setSearch(e.target.value)} style={{ marginBottom: 12 }} autoFocus />
-                <div style={{ maxHeight: 280, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
                   {(search ? filtered : FOOD_DB).map((f, i) => (
-                    <div key={i} onClick={() => addFood(f)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 'var(--r-md)', background: 'var(--bg-raised)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s' }}
-                      onMouseOver={e => e.currentTarget.style.borderColor = 'var(--border-bright)'}
-                      onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                    <button key={i} className="line-item" style={{ width: '100%', textAlign: 'left', padding: '11px 6px' }} onClick={() => addFood(f)}>
                       <div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{f.name}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-3)' }}>P:{f.protein}g C:{f.carbs}g F:{f.fat}g</div>
+                        <div className="t" style={{ fontWeight: 500 }}>{f.name}</div>
+                        <div className="s mono">P {f.protein}g · C {f.carbs}g · F {f.fat}g</div>
                       </div>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 700 }}>{f.calories}</span>
-                    </div>
+                      <div className="end"><span className="kc" style={{ fontWeight: 700 }}>{f.calories}</span></div>
+                    </button>
                   ))}
                 </div>
               </>
             ) : (
               <div>
-                <div className="form-group">
-                  <label className="form-label">Food Name</label>
+                <div className="field">
+                  <label>Food name</label>
                   <input placeholder="e.g. Homemade Dal" value={custom.name} onChange={e => setCustom(p => ({...p, name: e.target.value}))} />
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Calories</label>
+                <div className="field-row">
+                  <div className="field">
+                    <label>Calories</label>
                     <input type="number" placeholder="0" value={custom.calories} onChange={e => setCustom(p => ({...p, calories: e.target.value}))} />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Protein (g)</label>
+                  <div className="field">
+                    <label>Protein (g)</label>
                     <input type="number" placeholder="0" value={custom.protein} onChange={e => setCustom(p => ({...p, protein: e.target.value}))} />
                   </div>
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Carbs (g)</label>
+                <div className="field-row">
+                  <div className="field">
+                    <label>Carbs (g)</label>
                     <input type="number" placeholder="0" value={custom.carbs} onChange={e => setCustom(p => ({...p, carbs: e.target.value}))} />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Fat (g)</label>
+                  <div className="field">
+                    <label>Fat (g)</label>
                     <input type="number" placeholder="0" value={custom.fat} onChange={e => setCustom(p => ({...p, fat: e.target.value}))} />
                   </div>
                 </div>
-                <button className="btn btn-primary" style={{ width: '100%' }} onClick={addCustom}>Add Food</button>
+                <button className="btn primary block" onClick={addCustom}>Add food</button>
               </div>
             )}
           </div>

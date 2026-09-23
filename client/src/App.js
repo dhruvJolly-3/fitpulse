@@ -15,11 +15,9 @@ import OnboardingPage from './pages/OnboardingPage';
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', flexDirection:'column', gap:16 }}>
-      <div style={{ width:40, height:40, background:'var(--accent)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      </div>
-      <span style={{ color:'var(--text-3)', fontSize:'0.85rem' }}>Loading FitPulse…</span>
+    <div className="center-screen">
+      <div className="brand-mark">F</div>
+      <span className="label">Loading FitPulse…</span>
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
