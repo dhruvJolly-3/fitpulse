@@ -5,7 +5,11 @@ const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
-const api = axios.create({ baseURL: 'https://fitpulse-production-3645.up.railway.app/api' });
+// Backend origin. Set REACT_APP_API_URL on Vercel (inlined at build time by
+// Create React App); local dev falls back to the Express server on :5001.
+const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001').replace(/\/$/, '');
+
+const api = axios.create({ baseURL: `${API_URL}/api` });
 
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('fp_token');
