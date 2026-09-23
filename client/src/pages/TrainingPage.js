@@ -128,7 +128,7 @@ export default function TrainingPage() {
       daysPerWeek: actualWorkDays,
       durationWeeks: goal === 'gain_muscle' ? 16 : 12,
       goal, dietType: diet, active: true, generatedByAI: true,
-      description: `AI-generated ${PROGRAM_NAMES[goal] || 'Custom'} program — ${actualWorkDays} days/week, tailored for ${diet} diet and ${goal.replace(/_/g, ' ')} goal`,
+      description: `Auto-generated ${PROGRAM_NAMES[goal] || 'Custom'} program — ${actualWorkDays} days/week, tailored for ${diet} diet and ${goal.replace(/_/g, ' ')} goal`,
       schedule,
     };
     try {
@@ -173,276 +173,233 @@ export default function TrainingPage() {
   const completedCount = todayLog?.exercises?.filter(e => e.completed).length || 0;
   const totalCount = todayLog?.exercises?.length || todayProgDay?.exercises?.length || 0;
 
+  const exercises = todayLog?.exercises || todayProgDay?.exercises || [];
+
   return (
     <div className="fade-up">
-      <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h1 className="page-title">Training</h1>
-            <p className="page-subtitle">Your AI-tailored workout program</p>
-          </div>
-          {/* ─── FIX 4: Button with active glow state ─── */}
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowGenerate(true)}
-            style={{ position: 'relative', overflow: 'hidden' }}
-          >
-            <span style={{ fontSize: '1rem' }}>⚡</span> Generate Program
-            <span className="btn-ripple" />
-          </button>
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Training</h1>
+          <div className="page-date">your tailored workout program</div>
         </div>
-      </div>
+        <button className="btn primary" onClick={() => setShowGenerate(true)}>⚡ Generate program</button>
+      </header>
 
       <div className="page-body">
         {/* Stats row */}
-        <div className="grid-3" style={{ marginBottom: 16 }}>
-          {[
-            { label: 'Streak', value: streak.streak, sub: 'days in a row', color: 'var(--orange)', suffix: '🔥' },
-            { label: 'Total Workouts', value: streak.totalWorkouts, sub: 'sessions logged', color: 'var(--accent2)' },
-            { label: "Today's Progress", value: `${totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0}%`, sub: `${completedCount}/${totalCount} exercises`, color: 'var(--accent)' },
-          ].map(({ label, value, sub, color, suffix }) => (
-            <div key={label} className="metric-tile metric-tile--hover">
-              <span className="label">{label}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="value" style={{ color }}>{value}</span>
-                {suffix && <span style={{ fontSize: '1.4rem' }}>{suffix}</span>}
-              </div>
-              <span className="subtext">{sub}</span>
-            </div>
-          ))}
+        <div className="grid g-3">
+          <div className="card stat-tile">
+            <div className="k">Streak</div>
+            <div className="v" style={{ color: streak.streak > 0 ? 'var(--coral)' : undefined }}>{streak.streak}<span className="u">days</span></div>
+            <div className="d">in a row</div>
+          </div>
+          <div className="card stat-tile">
+            <div className="k">Total workouts</div>
+            <div className="v">{streak.totalWorkouts}</div>
+            <div className="d">sessions logged</div>
+          </div>
+          <div className="card stat-tile">
+            <div className="k">Today's progress</div>
+            <div className="v">{totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0}<span className="u">%</span></div>
+            <div className="d">{completedCount}/{totalCount} exercises</div>
+          </div>
         </div>
 
         {program ? (
           <>
-            {/* Active Program card */}
-            <div className="card card--accent" style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                    <span className="badge badge-green">Active Program</span>
-                    {program.generatedByAI && <span className="badge badge-blue">⚡ AI Generated</span>}
-                  </div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>{program.name}</h3>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', marginTop: 4 }}>{program.description}</p>
-                </div>
-                {/* ─── FIX 5: Regenerate button ─── */}
-                <button className="btn btn-ghost btn-sm" onClick={() => setShowGenerate(true)} title="Regenerate program">
-                  🔄
-                </button>
-              </div>
-              <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-2)', flexWrap: 'wrap' }}>
-                <span>📅 {program.daysPerWeek}x/week</span>
-                <span>⏱️ {program.durationWeeks} weeks</span>
-                <span>🎯 {program.goal?.replace(/_/g, ' ')}</span>
-                <span>🥗 {program.dietType}</span>
-              </div>
-            </div>
-
-            {/* Today's Session */}
-            <div className="card" style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <div className="card-title">Today's Session</div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700 }}>
-                    {todayProgDay?.label || 'Rest Day'}
-                  </div>
-                </div>
-                {!todayLog ? (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {!todayProgDay?.isRest && (
-                      <button className="btn btn-primary btn-sm" onClick={() => logWorkout(todayProgDay, false, false)}>
-                        ▶ Start
-                      </button>
-                    )}
-                    <button className="btn btn-secondary btn-sm" onClick={() => logWorkout(todayProgDay, todayProgDay?.isRest, false)}>
-                      {todayProgDay?.isRest ? '😴 Log Rest' : '📋 Log Day'}
-                    </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => logWorkout(todayProgDay, false, true)}>
-                      ✕ Off Day
-                    </button>
-                  </div>
-                ) : (
-                  <span className={`badge ${todayLog.isOffDay ? 'badge-red' : todayLog.isRestDay ? 'badge-orange' : 'badge-green'}`}>
-                    {todayLog.isOffDay ? '❌ Off Day' : todayLog.isRestDay ? '😴 Rest' : '✅ Logged'}
-                  </span>
-                )}
-              </div>
-
-              {(todayLog?.exercises || todayProgDay?.exercises || []).map((ex, i) => (
-                <div key={i} className="exercise-row">
-                  <div
-                    className={`exercise-check ${todayLog?.exercises?.[i]?.completed ? 'done' : ''}`}
-                    onClick={() => todayLog && toggleExercise(i)}
-                    style={{ cursor: todayLog ? 'pointer' : 'default' }}
-                  >
-                    {todayLog?.exercises?.[i]?.completed && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{ex.name}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>
-                      {ex.sets ? `${ex.sets} sets × ` : ''}
-                      {ex.reps ? `${ex.reps} reps` : ''}
-                      {ex.weight ? ` @ ${ex.weight}` : ''}
-                      {ex.duration ? `${ex.duration} min` : ''}
+            <div className="grid g-12">
+              {/* Today's session */}
+              <div className="card span-8">
+                <div className="card-h" style={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div>
+                    <span className="label">today · {format(new Date(), 'EEEE')}</span>
+                    <div className="session-title">
+                      {todayProgDay?.label?.split(' — ')[0] || 'Rest Day'}
+                      {todayProgDay?.label?.includes(' — ') && <span className="serif-it"> · {todayProgDay.label.split(' — ')[1].toLowerCase()}</span>}
                     </div>
                   </div>
-                  <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>{ex.category}</span>
+                  {!todayLog ? (
+                    <div className="page-actions">
+                      {!todayProgDay?.isRest && (
+                        <button className="btn primary sm" onClick={() => logWorkout(todayProgDay, false, false)}>
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l11-7z"/></svg> Start
+                        </button>
+                      )}
+                      <button className="btn ghost sm" onClick={() => logWorkout(todayProgDay, todayProgDay?.isRest, false)}>
+                        {todayProgDay?.isRest ? 'Log rest' : 'Log day'}
+                      </button>
+                      <button className="btn danger sm" onClick={() => logWorkout(todayProgDay, false, true)}>
+                        Off day
+                      </button>
+                    </div>
+                  ) : (
+                    <span className={`pill ${todayLog.isOffDay ? 'coral' : todayLog.isRestDay ? 'out' : 'matcha'}`}>
+                      {todayLog.isOffDay ? 'Off day' : todayLog.isRestDay ? 'Rest' : 'Logged'}
+                    </span>
+                  )}
                 </div>
-              ))}
 
-              {totalCount > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div className="macro-track">
-                    <div className="macro-fill" style={{ width: `${completedCount / totalCount * 100}%`, background: 'var(--accent)' }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: '0.75rem', color: 'var(--text-3)' }}>
-                    <span>{completedCount} done</span>
-                    <span>{totalCount - completedCount} remaining</span>
-                  </div>
-                </div>
-              )}
-            </div>
+                {totalCount > 0 && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0 8px' }}>
+                      <span className="label">session progress</span>
+                      <span className="mono" style={{ fontSize: 12 }}>{completedCount} / {totalCount} done</span>
+                    </div>
+                    <div className="bar lime" style={{ marginBottom: 20 }}><i style={{ width: `${completedCount / totalCount * 100}%` }} /></div>
+                  </>
+                )}
 
-            {/* Weekly Schedule */}
-            <div className="card" style={{ marginBottom: 16 }}>
-              <div className="card-title">Weekly Schedule</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {DAY_LABELS.map((d, i) => {
-                  const day = program.schedule?.[i];
-                  const isToday = i === dayIndex;
+                {exercises.map((ex, i) => {
+                  const done = todayLog?.exercises?.[i]?.completed;
                   return (
-                    <div
-                      key={i}
-                      title={day?.label}
-                      style={{
-                        textAlign: 'center', padding: '8px 4px', borderRadius: 'var(--r-md)',
-                        background: isToday ? 'var(--accent-dim)' : day?.isRest ? 'var(--bg-raised)' : 'rgba(91,142,255,0.08)',
-                        border: `1px solid ${isToday ? 'var(--accent)' : day?.isRest ? 'var(--border)' : 'rgba(91,142,255,0.3)'}`,
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.65rem', color: isToday ? 'var(--accent)' : 'var(--text-3)', marginBottom: 4, fontWeight: isToday ? 700 : 400 }}>{d}</div>
-                      <div style={{ fontSize: '0.75rem' }}>{day?.isRest ? '💤' : '🏋️'}</div>
-                      {isToday && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent)', margin: '4px auto 0' }} />}
+                    <div key={i} className={`exo ${done ? 'done' : ''} ${todayLog ? 'clickable' : ''}`}
+                      onClick={() => todayLog && toggleExercise(i)}>
+                      <div className="check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l4 4 10-11"/></svg>
+                      </div>
+                      <div>
+                        <div className="nm">{ex.name}</div>
+                        <div className="meta">
+                          {ex.sets ? `${ex.sets} sets × ` : ''}
+                          {ex.reps ? `${ex.reps} reps` : ''}
+                          {ex.weight ? ` @ ${ex.weight}` : ''}
+                          {ex.duration ? `${ex.duration} min` : ''}
+                        </div>
+                      </div>
+                      <span className="pill out end">{ex.category}</span>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Program + weekly schedule */}
+              <div className="span-4 stack">
+                <div className="card dark">
+                  <div className="chips" style={{ marginBottom: 12 }}>
+                    <span className="pill matcha">Active program</span>
+                    {program.generatedByAI && <span className="pill out">Auto-generated</span>}
+                  </div>
+                  <div className="num" style={{ fontSize: 26, lineHeight: 1.05 }}>{program.name}</div>
+                  <p style={{ fontSize: 12.5, color: 'var(--cream-50)', marginTop: 8, lineHeight: 1.5 }}>{program.description}</p>
+                  <div className="mono" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 16, fontSize: 11, color: 'var(--cream-60)' }}>
+                    <span>{program.daysPerWeek}x/week</span>
+                    <span>{program.durationWeeks} weeks</span>
+                    <span style={{ textTransform: 'capitalize' }}>{program.goal?.replace(/_/g, ' ')}</span>
+                    <span>{program.dietType}</span>
+                  </div>
+                  <button className="btn ghost sm" style={{ marginTop: 18 }} onClick={() => setShowGenerate(true)}>Regenerate</button>
+                </div>
+
+                <div className="card">
+                  <div className="card-h"><h3>Weekly schedule</h3></div>
+                  <div className="dow-row">
+                    {DAY_LABELS.map((d, i) => <span key={d} className={i === dayIndex ? 'today' : ''}>{d}</span>)}
+                  </div>
+                  <div className="heatmap">
+                    {DAY_LABELS.map((d, i) => {
+                      const day = program.schedule?.[i];
+                      return (
+                        <div key={d} title={day?.label} className={`cell ${day?.isRest ? '' : 'l3'} ${i === dayIndex ? 'today' : ''}`} />
+                      );
+                    })}
+                  </div>
+                  <div className="heatmap-legend">
+                    <span><i style={{ background: 'var(--matcha)' }} />workout</span>
+                    <span><i style={{ background: 'var(--ink-08)' }} />rest</span>
+                    <span><i style={{ boxShadow: 'inset 0 0 0 2px var(--coral)' }} />today</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         ) : (
-          <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>🏋️</div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, marginBottom: 8 }}>No Active Program</h3>
-            <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', marginBottom: 24, maxWidth: 300, margin: '0 auto 24px' }}>
-              Generate an AI-tailored program based on your goal ({user?.profile?.goal?.replace(/_/g, ' ')}) and diet ({user?.profile?.dietType})
-            </p>
-            <button className="btn btn-primary" onClick={() => setShowGenerate(true)}>⚡ Generate My Program</button>
+          <div className="card empty">
+            <div className="ic">🏋️</div>
+            <h3>No active <span className="serif-it">program</span></h3>
+            <p>Generate a program based on your goal ({user?.profile?.goal?.replace(/_/g, ' ')}) and diet ({user?.profile?.dietType}).</p>
+            <button className="btn primary" onClick={() => setShowGenerate(true)}>⚡ Generate my program</button>
           </div>
         )}
 
         {/* Recent Logs */}
         {recentLogs.length > 0 && (
           <div className="card">
-            <div className="card-title">Recent Activity</div>
-            {recentLogs.slice(0, 7).map(l => (
-              <div key={l._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{l.dayLabel || 'Workout'}</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>{l.date}</div>
-                </div>
-                <span className={`badge ${l.isOffDay ? 'badge-red' : l.isRestDay ? 'badge-orange' : 'badge-green'}`}>
-                  {l.isOffDay ? 'Off' : l.isRestDay ? 'Rest' : `${l.totalCaloriesBurnt || 0} kcal`}
-                </span>
-              </div>
-            ))}
+            <div className="card-h"><h3>Recent activity</h3><span className="label">last {Math.min(recentLogs.length, 7)} sessions</span></div>
+            <div className="tbl-wrap">
+              <table className="tbl">
+                <thead><tr><th>Session</th><th>Date</th><th>Result</th></tr></thead>
+                <tbody>
+                  {recentLogs.slice(0, 7).map(l => (
+                    <tr key={l._id}>
+                      <td>{l.dayLabel || 'Workout'}</td>
+                      <td className="mono">{l.date}</td>
+                      <td>
+                        <span className={`pill ${l.isOffDay ? 'coral' : l.isRestDay ? 'out' : 'matcha'}`}>
+                          {l.isOffDay ? 'Off' : l.isRestDay ? 'Rest' : `${l.totalCaloriesBurnt || 0} kcal`}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ─── Generate Program Modal — now asks user for days + rest days ─── */}
+      {/* Generate Program Modal — asks user for rest days */}
       {showGenerate && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowGenerate(false)}>
           <div className="modal">
-            <div className="modal-handle" />
-            <div className="modal-title">⚡ Generate AI Program</div>
+            <div className="modal-head">
+              <div className="modal-title">Generate <span className="serif-it">program</span></div>
+              <button className="icon-btn" onClick={() => setShowGenerate(false)} title="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
 
-            <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', marginBottom: 20 }}>
+            <p className="muted" style={{ marginBottom: 16 }}>
               Customise your schedule — we'll build the rest around your goal and diet.
             </p>
 
-            {/* Profile summary */}
             {[
               ['Goal', user?.profile?.goal?.replace(/_/g, ' ')],
               ['Diet', user?.profile?.dietType],
             ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text-3)', fontSize: '0.82rem' }}>{k}</span>
-                <span style={{ fontWeight: 600, fontSize: '0.82rem', textTransform: 'capitalize' }}>{v}</span>
-              </div>
+              <div key={k} className="kv"><span className="k">{k}</span><span className="v">{v}</span></div>
             ))}
 
-            {/* Days per week slider */}
-            <div style={{ marginTop: 20, marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Workout Days / Week
-                </span>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--accent)', fontSize: '1.1rem' }}>
-                  {7 - genRestDays.length}
-                </span>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '22px 0 10px' }}>
+              <span className="field-label">Workout days / week</span>
+              <span className="num" style={{ fontSize: 28 }}>{7 - genRestDays.length}</span>
             </div>
 
-            {/* Rest day picker */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-3)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Select your rest days
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
-                {DAY_LABELS.map((d, i) => {
-                  const isRest = genRestDays.includes(i);
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => toggleRestDay(i)}
-                      style={{
-                        padding: '8px 4px',
-                        borderRadius: 'var(--r-md)',
-                        border: `1px solid ${isRest ? 'var(--border)' : 'var(--accent)'}`,
-                        background: isRest ? 'var(--bg-raised)' : 'var(--accent-dim)',
-                        color: isRest ? 'var(--text-3)' : 'var(--accent)',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div>{d}</div>
-                      <div style={{ fontSize: '0.65rem', marginTop: 2 }}>{isRest ? '💤' : '🏋️'}</div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: 8 }}>
-                💡 Tap days to toggle rest / workout. Green = workout day.
-              </div>
+            <span className="field-label">Tap to toggle rest days</span>
+            <div className="heatmap" style={{ marginTop: 10 }}>
+              {DAY_LABELS.map((d, i) => {
+                const isRest = genRestDays.includes(i);
+                return (
+                  <button key={i} onClick={() => toggleRestDay(i)} className={`cell ${isRest ? '' : 'l3'}`}
+                    style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700 }}>
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="heatmap-legend" style={{ marginBottom: 22 }}>
+              <span><i style={{ background: 'var(--matcha)' }} />workout</span>
+              <span><i style={{ background: 'var(--ink-08)' }} />rest</span>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowGenerate(false)}>Cancel</button>
+              <button className="btn ghost" style={{ flex: 1 }} onClick={() => setShowGenerate(false)}>Cancel</button>
               <button
-                className="btn btn-primary"
+                className="btn primary"
                 style={{ flex: 2 }}
                 onClick={generateProgram}
                 disabled={generating || genRestDays.length >= 7}
               >
-                {generating ? 'Generating…' : 'Generate Program 🚀'}
+                {generating ? 'Generating…' : 'Generate program'}
               </button>
             </div>
           </div>

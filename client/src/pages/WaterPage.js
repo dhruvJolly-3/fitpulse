@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, subDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
+import WeekBars from '../components/WeekBars';
 
 const today = format(new Date(), 'yyyy-MM-dd');
 const QUICK_AMOUNTS = [150, 250, 350, 500];
 const DRINK_TYPES = [
-  { v: 'water', label: 'Water', icon: '💧', color: '#5b8eff' },
-  { v: 'green_tea', label: 'Green Tea', icon: '🍵', color: '#2ed9c3' },
-  { v: 'coffee', label: 'Coffee', icon: '☕', color: '#ff9f43' },
-  { v: 'juice', label: 'Juice', icon: '🧃', color: '#b5f23d' },
-  { v: 'sports_drink', label: 'Sports', icon: '🥤', color: '#a78bfa' },
+  { v: 'water', label: 'Water', icon: '💧' },
+  { v: 'green_tea', label: 'Green Tea', icon: '🍵' },
+  { v: 'coffee', label: 'Coffee', icon: '☕' },
+  { v: 'juice', label: 'Juice', icon: '🧃' },
+  { v: 'sports_drink', label: 'Sports', icon: '🥤' },
 ];
 
 export default function WaterPage() {
@@ -25,153 +25,139 @@ export default function WaterPage() {
 
   const fetchLog = () => api.get(`/water/${today}`).then(r => setLog(r.data)).catch(() => {});
 
+  // Last 7 days from the server; days with no log show as 0
+  const fetchWeek = () => {
+    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+    api.get(`/water/history/week?startDate=${start}`)
+      .then(r => {
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = subDays(new Date(), 6 - i);
+          const found = r.data.find(l => l.date === format(d, 'yyyy-MM-dd'));
+          return { day: format(d, 'EEE'), date: format(d, 'yyyy-MM-dd'), amount: found?.total || 0 };
+        });
+        setWeekData(days);
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetchLog();
-    // Build week mock data
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - (6 - i));
-      return { day: format(d, 'EEE'), amount: Math.floor(Math.random() * 1500) + 1000 };
-    });
-    setWeekData(days);
+    fetchWeek();
   }, []);
 
   const addWater = async (a, t) => {
     setAdding(true);
     await api.post(`/water/${today}/add`, { amount: a, type: t, time: new Date() });
     fetchLog();
+    fetchWeek();
     setAdding(false);
   };
 
   const removeEntry = async (id) => {
     await api.delete(`/water/${today}/entry/${id}`);
     fetchLog();
+    fetchWeek();
   };
 
   const total = log?.total || 0;
   const pct = Math.min(total / target * 100, 100);
   const remaining = Math.max(target - total, 0);
 
-  // Wave animation fill
-  const waveHeight = pct;
-
   return (
     <div className="fade-up">
-      <div className="page-header">
-        <h1 className="page-title">Hydration</h1>
-        <p className="page-subtitle">Stay hydrated, stay sharp</p>
-      </div>
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Hydration</h1>
+          <div className="page-date">stay hydrated, stay sharp</div>
+        </div>
+      </header>
 
       <div className="page-body">
-        {/* Big water display */}
-        <div className="card" style={{ marginBottom: 16, textAlign: 'center', padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-          {/* Animated water bg */}
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            height: `${waveHeight}%`,
-            background: 'linear-gradient(to top, rgba(91,142,255,0.2), rgba(91,142,255,0.05))',
-            transition: 'height 0.8s cubic-bezier(0.4,0,0.2,1)',
-          }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: '3rem', marginBottom: 8 }}>💧</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '3rem', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--accent2)', lineHeight: 1 }}>
-              {(total / 1000).toFixed(2)}<span style={{ fontSize: '1.5rem' }}>L</span>
+        <div className="grid g-12">
+          {/* Today's total */}
+          <div className="card dark span-5">
+            <div className="card-h">
+              <span className="label">today</span>
+              <span className={`pill ${remaining > 0 ? 'out' : 'matcha'}`}>{remaining > 0 ? `${Math.round(pct)}%` : 'goal reached'}</span>
             </div>
-            <div style={{ color: 'var(--text-3)', fontSize: '0.85rem', marginTop: 6 }}>
-              {remaining > 0 ? `${remaining}ml to reach goal` : '🎉 Goal reached!'}
+            <div className="num" style={{ fontSize: 64, lineHeight: 1 }}>
+              {(total / 1000).toFixed(2)}<span style={{ fontSize: '0.35em', color: 'var(--cream-50)' }}> / {(target / 1000).toFixed(1)} L</span>
             </div>
-            <div style={{ marginTop: 16, height: 8, background: 'var(--bg-raised)', borderRadius: 4, overflow: 'hidden', maxWidth: 280, margin: '16px auto 0' }}>
-              <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent2)', borderRadius: 4, transition: 'width 0.6s ease' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: 280, margin: '6px auto 0', fontSize: '0.72rem', color: 'var(--text-3)' }}>
-              <span>0ml</span>
-              <span style={{ fontWeight: 700, color: 'var(--accent2)' }}>{Math.round(pct)}%</span>
-              <span>{target}ml</span>
+            <div className="bar lime" style={{ marginTop: 16 }}><i style={{ width: `${pct}%` }} /></div>
+            <div style={{ fontSize: 13, color: 'var(--cream-50)', marginTop: 14 }}>
+              {remaining > 0 ? `${remaining}ml to reach your goal` : 'Daily goal reached — nice.'}
             </div>
           </div>
-        </div>
 
-        {/* Quick add buttons */}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-title">Quick Add</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            {QUICK_AMOUNTS.map(a => (
-              <button key={a} className={`btn btn-secondary ${amount === a ? '' : ''}`}
-                onClick={() => { setAmount(a); addWater(a, type); }}
-                style={{ flex: 1, padding: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, background: amount === a ? 'var(--accent2-dim)' : undefined, borderColor: amount === a ? 'var(--accent2)' : undefined }}
-                disabled={adding}>
-                {a}ml
+          {/* Quick add */}
+          <div className="card span-7">
+            <div className="card-h"><h3>Quick add</h3><span className="label">ml</span></div>
+            <div className="chips" style={{ marginBottom: 14 }}>
+              {QUICK_AMOUNTS.map(a => (
+                <button key={a} className={`chip lg ${amount === a ? 'on' : ''}`}
+                  onClick={() => { setAmount(a); addWater(a, type); }} disabled={adding}>
+                  {a}ml
+                </button>
+              ))}
+            </div>
+
+            <div className="chips">
+              {DRINK_TYPES.map(d => (
+                <button key={d.v} className={`chip ${type === d.v ? 'on' : ''}`} onClick={() => setType(d.v)}>
+                  <span>{d.icon}</span>{d.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <div className="input-affix" style={{ flex: 1 }}>
+                <input type="number" placeholder="Custom" value={amount} onChange={e => setAmount(+e.target.value)} />
+                <span>ml</span>
+              </div>
+              <button className="btn primary" onClick={() => addWater(amount, type)} disabled={adding || !amount}>
+                {adding ? '…' : '+ Add'}
               </button>
-            ))}
-          </div>
-
-          {/* Drink type */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {DRINK_TYPES.map(d => (
-              <button key={d.v} onClick={() => setType(d.v)}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 14px', borderRadius: 'var(--r-md)', border: `1px solid ${type === d.v ? d.color : 'var(--border)'}`, background: type === d.v ? `${d.color}15` : 'transparent', cursor: 'pointer', transition: 'all 0.15s', flex: 1 }}>
-                <span style={{ fontSize: '1.2rem' }}>{d.icon}</span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: type === d.v ? d.color : 'var(--text-3)' }}>{d.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <input type="number" placeholder="Custom ml" value={amount}
-              onChange={e => setAmount(+e.target.value)}
-              style={{ flex: 1 }} />
-            <button className="btn btn-primary" onClick={() => addWater(amount, type)} disabled={adding || !amount}>
-              {adding ? '…' : '+ Add'}
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Weekly chart */}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-title">7-Day Hydration</div>
-          <ResponsiveContainer width="100%" height={100}>
-            <AreaChart data={weekData}>
-              <defs>
-                <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#5b8eff" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#5b8eff" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-3)' }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip contentStyle={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }} formatter={v => [`${v}ml`, 'Water']} />
-              <Area type="monotone" dataKey="amount" stroke="#5b8eff" fill="url(#waterGrad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        <div className="grid g-12">
+          {/* Weekly chart */}
+          <div className="card span-7">
+            <div className="card-h"><h3>7-day hydration</h3><span className="label">target {target}ml</span></div>
+            <WeekBars data={weekData} xKey="day" yKey="amount" label="Water" target={target}
+              isToday={d => d.date === today} format={v => `${v}ml`} />
+          </div>
 
-        {/* Today's log */}
-        {log?.entries?.length > 0 && (
-          <div className="card">
-            <div className="card-title">Today's Log</div>
-            {[...log.entries].reverse().map((e, i) => {
-              const dt = DRINK_TYPES.find(d => d.v === e.type) || DRINK_TYPES[0];
-              return (
-                <div key={e._id || i} className="drop-animate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '1.2rem' }}>{dt.icon}</span>
+          {/* Today's log */}
+          <div className="card span-5">
+            <div className="card-h"><h3>Today's log</h3><span className="label">{log?.entries?.length || 0} drinks</span></div>
+            {log?.entries?.length > 0 ? (
+              [...log.entries].reverse().map((e, i) => {
+                const dt = DRINK_TYPES.find(d => d.v === e.type) || DRINK_TYPES[0];
+                return (
+                  <div key={e._id || i} className="line-item">
+                    <div className="ic">{dt.icon}</div>
                     <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{dt.label}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>
+                      <div className="t">{dt.label}</div>
+                      <div className="s mono">
                         {e.time ? new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                       </div>
                     </div>
+                    <div className="end">
+                      <span className="kc">{e.amount}ml</span>
+                      <button className="icon-btn" onClick={() => removeEntry(e._id)} title="Remove">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: dt.color, fontWeight: 700 }}>{e.amount}ml</span>
-                    <button className="btn btn-ghost btn-icon" onClick={() => removeEntry(e._id)} style={{ color: 'var(--text-3)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <p className="muted" style={{ fontSize: 13 }}>Nothing logged yet today.</p>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
