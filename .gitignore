@@ -1,2 +1,11 @@
 node_modules
+
+# Environment files — only the .env.example templates are committed
 .env
+.env.*
+!.env.example
+
+# Build output
+client/build
+
+.DS_Store
