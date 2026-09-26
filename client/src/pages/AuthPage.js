@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import GoogleButton from '../components/GoogleButton';
+import AuthHero from '../components/AuthHero';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
@@ -33,19 +34,18 @@ export default function AuthPage() {
 
   return (
     <div className="auth">
-      <section className="auth-hero">
-        <div className="brand">
-          <div className="brand-mark">F</div>
-          <span className="brand-name">FitPulse<b>.</b></span>
-        </div>
-        <div>
-          <h1>train. eat.<br />sleep. <span className="serif-it">repeat.</span></h1>
-          <p>Nutrition, training, hydration, sleep and steps — tracked in one place, against targets built from your own body stats.</p>
-        </div>
-        <span className="label" style={{ color: 'var(--cream-34)' }}>Track nutrition · Train smarter · Sleep better</span>
-      </section>
+      <AuthHero />
 
       <section className="auth-form">
+        {/* Right-side backdrop: smoke drifting in from the hero, soft glows and a heartbeat line */}
+        <div className="af-bg" aria-hidden="true">
+          <span className="af-smoke" />
+          <span className="af-glow g1" />
+          <span className="af-glow g2" />
+          <svg className="af-pulse" viewBox="0 0 600 120" preserveAspectRatio="none">
+            <path d="M0 60 H200 L220 60 L235 25 L250 100 L265 10 L280 80 L292 60 H600" />
+          </svg>
+        </div>
         <div className="inner fade-up">
           <div className="seg">
             {['login', 'register'].map(m => (

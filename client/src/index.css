@@ -903,6 +903,145 @@ input[type="number"] { -moz-appearance: textfield; }
 @media (max-width: 600px) { .page-heading .pulse { width: 46px; height: 46px; } }
 
 /* ===========================================================
+   Animated auth / landing hero (components/AuthHero.js)
+   =========================================================== */
+.ah { position: relative; overflow: hidden; --mx: 0; --my: 0; }
+.ah .brand { position: relative; z-index: 2; align-items: center; }
+.ah-pulse { margin-left: 6px; animation: numIn 0.6s var(--ease-out) 0.8s both; }
+.ah-pulse .p-limb, .ah-pulse .p-limb line { stroke: var(--on-dark); }
+
+/* headline: each word rises out of a mask */
+.ah-copy { position: relative; z-index: 2; }
+.ah h1 { animation: none; }
+.ah-word { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.ah-word > span { display: inline-block; animation: ahRise 0.9s var(--ease-out) both; }
+@keyframes ahRise { from { transform: translateY(105%); } to { transform: none; } }
+.ah-word + .ah-word { margin-left: 0.22em; }
+.ah h1 .ah-cycle > span.serif-it { color: var(--matcha); animation: ahSwap 2.4s var(--ease-out) both; }
+@keyframes ahSwap {
+  0% { transform: translateY(100%); opacity: 0; }
+  14%, 82% { transform: none; opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+.ah-copy p { animation: numIn 0.8s var(--ease-out) 0.6s both; }
+
+/* floating cards, positioned in the empty top-right of the panel */
+.ah > *:not(.ah-bg) { position: relative; z-index: 2; }
+.ah-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.ah-bg img {
+  position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: none;
+  transform: translate(calc(var(--mx) * -14px), calc(var(--my) * -10px));
+  transition: transform 0.6s var(--ease-out);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%); mask-image: linear-gradient(90deg, transparent, #000 40%);
+  animation: ahBgIn 1.6s var(--ease-out) both, ahBreath 14s ease-in-out 1.6s infinite;
+}
+/* darken toward the text side and the bottom so copy stays readable (also hides the corner mark) */
+.ah-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, var(--obsidian) 22%, rgba(14,14,16,0.75) 48%, rgba(14,14,16,0.15) 75%, rgba(14,14,16,0.35) 100%),
+    linear-gradient(0deg, var(--obsidian) 4%, rgba(14,14,16,0) 30%),
+    linear-gradient(180deg, rgba(14,14,16,0.6) 0%, rgba(14,14,16,0) 18%);
+}
+@keyframes ahBgIn { from { opacity: 0; scale: 1.12; filter: blur(6px); } to { opacity: 1; scale: 1; filter: blur(0); } }
+@keyframes ahBreath { 0%, 100% { scale: 1; } 50% { scale: 1.04; } }
+.ah-art { position: relative; display: flex; flex-wrap: nowrap; gap: 10px; align-items: flex-start; margin: 28px 0; z-index: 1; pointer-events: none; }
+.ah-art .ah-card { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.ah-art .ah-card { position: relative; top: auto; left: auto; right: auto; bottom: auto; }
+.ah-card {
+  position: absolute;
+  transform: translate(calc(var(--mx) * var(--d) * 10px), calc(var(--my) * var(--d) * 8px));
+  transition: transform 0.6s var(--ease-out);
+  animation: ahCardIn 0.9s var(--ease-spring) both;
+}
+@keyframes ahCardIn { from { opacity: 0; scale: 0.85; } to { opacity: 1; scale: 1; } }
+.ah-float {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, rgba(40, 52, 56, 0.55), rgba(12, 14, 16, 0.7));
+  border: 1px solid rgba(140, 220, 225, 0.18); border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140, 220, 225, 0.12);
+  padding: 10px 12px; backdrop-filter: blur(6px) saturate(0.8); -webkit-backdrop-filter: blur(6px) saturate(0.8);
+  animation: ahBob 7s ease-in-out infinite;
+}
+/* neon glint that sweeps across, like the tube light in the artwork */
+.ah-float::after {
+  content: ''; position: absolute; inset: -40% auto -40% -60%; width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(140, 220, 225, 0.14), transparent);
+  transform: rotate(18deg); animation: ahGlint 7s ease-in-out infinite;
+}
+@keyframes ahGlint { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+@keyframes ahBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.ah-k { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(160, 215, 218, 0.6); margin-bottom: 7px; }
+
+.ah-cal { top: 0; left: 0; animation-delay: 0.3s; rotate: -3deg; }
+.ah-grid { display: grid; grid-template-columns: repeat(7, 11px); gap: 4px; }
+.ah-grid i { width: 11px; height: 11px; border-radius: 3px; background: var(--cream-12); animation: ahDay 4.8s ease-in-out infinite; }
+.ah-grid i.rest { animation-name: ahRest; }
+@keyframes ahDay { 0%, 8% { background: var(--cream-12); transform: scale(0.8); } 14%, 88% { background: rgba(200, 224, 100, 0.85); box-shadow: 0 0 6px rgba(200, 224, 100, 0.35); transform: none; } 100% { background: var(--cream-12); } }
+@keyframes ahRest { 0%, 8% { background: var(--cream-12); } 14%, 88% { background: rgba(241,235,222,0.28); } 100% { background: var(--cream-12); } }
+
+.ah-ring { top: 20px; right: 0; animation-delay: 0.5s; rotate: 4deg; margin-top: 26px; }
+.ah-ring .ah-float { display: flex; flex-direction: column; align-items: center; padding: 10px; }
+.ah-ring svg { width: 52px; height: 52px; filter: drop-shadow(0 0 4px rgba(200, 224, 100, 0.35)); transform: rotate(-90deg); }
+.ah-ring circle { fill: none; stroke-width: 9; stroke-linecap: round; }
+.ah-ring .track { stroke: var(--cream-12); }
+.ah-ring .fill { stroke: var(--matcha); stroke-dasharray: 201; animation: ahRing 4s var(--ease-out) infinite; }
+.ah-ring .ah-k { margin: 6px 0 0; }
+@keyframes ahRing { 0% { stroke-dashoffset: 201; } 60%, 85% { stroke-dashoffset: 40; } 100% { stroke-dashoffset: 201; } }
+
+/* right-side backdrop of the auth page */
+.auth-form { position: relative; overflow: hidden; }
+.auth-form .inner { position: relative; z-index: 1; }
+.af-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+/* haze bleeding in from the hero panel, so the two halves blend instead of cutting */
+.af-smoke {
+  position: absolute; top: -10%; bottom: -10%; left: -30%; width: 70%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(120, 190, 195, 0.16), transparent 65%);
+  filter: blur(30px); animation: afDrift 16s ease-in-out infinite alternate, afIn 1.4s var(--ease-out) both;
+}
+.af-glow { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5; animation: afFloat 18s ease-in-out infinite; }
+.af-glow.g1 { width: 340px; height: 340px; right: -80px; top: -60px; background: rgba(200, 224, 100, 0.22); }
+.af-glow.g2 { width: 280px; height: 280px; left: 20%; bottom: -90px; background: rgba(120, 190, 195, 0.18); animation-delay: -9s; animation-duration: 22s; }
+/* heartbeat line that keeps drawing across, behind the form */
+.af-pulse { position: absolute; left: 0; right: 0; bottom: 8%; width: 100%; height: 90px; opacity: 0.35; }
+.af-pulse path {
+  fill: none; stroke: var(--matcha); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 260 1400; stroke-dashoffset: 260; vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 6px rgba(200, 224, 100, 0.6));
+  animation: afBeat 4.5s linear infinite;
+}
+@keyframes afBeat { from { stroke-dashoffset: 260; } to { stroke-dashoffset: -1000; } }
+@keyframes afDrift { from { translate: 0 0; } to { translate: 80px -30px; } }
+@keyframes afFloat { 0%, 100% { translate: 0 0; scale: 1; } 50% { translate: -40px 30px; scale: 1.15; } }
+@keyframes afIn { from { opacity: 0; } to { opacity: 1; } }
+/* light theme: softer tints so the cream panel stays clean */
+:root:not([data-theme="dark"]) .af-glow { opacity: 0.35; }
+:root:not([data-theme="dark"]) .af-pulse { opacity: 0.22; }
+:root:not([data-theme="dark"]) .af-pulse path { stroke: #7a8f2a; }
+
+/* endless ticker */
+.ah-ticker { position: relative; z-index: 2; overflow: hidden; margin: 0 -48px -48px; padding: 14px 0; border-top: 1px solid var(--cream-12);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.ah-track { display: flex; width: max-content; animation: ahTicker 28s linear infinite; }
+.ah-track span { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-50); white-space: nowrap; padding: 0 16px; }
+.ah-track b { color: var(--matcha); margin-left: 32px; }
+@keyframes ahTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* sign-in form: fields slide in one after another */
+.auth-form .inner > *, .auth-form form > * { animation: cardIn 0.6s var(--ease-out) both; }
+.auth-form .inner > :nth-child(2) { animation-delay: 0.08s; }
+.auth-form form > :nth-child(1) { animation-delay: 0.16s; } .auth-form form > :nth-child(2) { animation-delay: 0.22s; }
+.auth-form form > :nth-child(3) { animation-delay: 0.28s; } .auth-form form > :nth-child(4) { animation-delay: 0.34s; }
+.auth-form form > :nth-child(n+5) { animation-delay: 0.4s; }
+
+@media (max-width: 920px) {
+  .ah { justify-content: flex-start; }
+  .ah-bg img { right: -20%; opacity: 0.55; }
+  .ah-art { margin: 4px 0; gap: 10px; }
+  .ah-ticker { margin: 0 -24px -32px; }
+}
+
+/* ===========================================================
    Responsive
    =========================================================== */
 @media (max-width: 1080px) {
