@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Circular progress ring (design: thick ink stroke on a faint track).
-export default function Ring({ value, max, size = 196, stroke = 15, color = 'var(--ink)', track = 'rgba(14,14,16,0.16)', children }) {
+export default function Ring({ value, max, size = 196, stroke = 15, color = 'var(--ink)', track = 'var(--ring-track)', children }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const pct = max > 0 ? Math.min(value / max, 1) : 0;

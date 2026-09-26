@@ -163,6 +163,19 @@ export function SpotifyProvider({ children }) {
     setVolumeState(v);
     command(() => spotifyApi('/me/player/volume', { method: 'PUT', query: { volume_percent: v } }));
   }, [command]);
+  // Mute = volume 0, remembering the previous level
+  const lastVolume = useRef(70);
+  const toggleMute = useCallback(() => {
+    if (volume > 0) { lastVolume.current = volume; setVolume(0); } else setVolume(lastVolume.current || 70);
+  }, [volume, setVolume]);
+  const toggleShuffle = useCallback(() => command(() =>
+    spotifyApi('/me/player/shuffle', { method: 'PUT', query: { state: String(!playback?.shuffle_state) } })), [command, playback?.shuffle_state]);
+  // Spotify's repeat states: off → context (all) → track (one)
+  const cycleRepeat = useCallback(() => {
+    const nextState = { off: 'context', context: 'track', track: 'off' }[playback?.repeat_state || 'off'];
+    command(() => spotifyApi('/me/player/repeat', { method: 'PUT', query: { state: nextState } }));
+  }, [command, playback?.repeat_state]);
+
   const pause = useCallback(() => command(() => spotifyApi('/me/player/pause', { method: 'PUT' })), [command]);
 
   const connect = useCallback(() => startSpotifyLogin().catch(report), [report]);
@@ -179,7 +192,10 @@ export function SpotifyProvider({ children }) {
       deviceId, deviceName: playback?.device?.name, error,
       current, playing: Boolean(playback?.is_playing),
       progress: (playback?.progress_ms || 0) / 1000, duration: (playback?.item?.duration_ms || 0) / 1000,
-      volume, ready: true, index: 0, queue: [],
+      volume, ready: true, index: 0, queue: [], source: 'spotify',
+      muted: volume === 0, shuffle: Boolean(playback?.shuffle_state),
+      repeat: { context: 'all', track: 'one' }[playback?.repeat_state] || 'off',
+      toggleMute, toggleShuffle, cycleRepeat,
       connect, disconnect, playContext, playTracks, toggle, next, prev, seek, setVolume, clear: pause, refresh,
     }}>
       {children}

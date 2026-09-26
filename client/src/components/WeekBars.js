@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
-import { COLORS } from '../theme';
+import { colorsFor } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 
 // 7- or 30-day bar chart in the design's style: muted ink bars, matcha when the
 // target was met, and today's column in coral.
@@ -10,6 +11,7 @@ import { COLORS } from '../theme';
 //   isToday     (row) => boolean, marks the current column
 //   label       tooltip series name; format: (value) => tooltip text
 export default function WeekBars({ data, xKey, yKey, label, target, isToday, format = v => v, height = 150, colorByTarget = true }) {
+  const COLORS = colorsFor(useTheme().resolved); // re-renders on theme switch
   const fillFor = (row) => {
     if (isToday && isToday(row)) return COLORS.coral;
     if (colorByTarget && target && row[yKey] >= target) return COLORS.matcha2;

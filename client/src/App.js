@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AppShell from './components/AppShell';
+import Splash from './components/Splash';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import NutritionPage from './pages/NutritionPage';
@@ -18,12 +20,7 @@ import SpotifyCallbackPage from './pages/SpotifyCallbackPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="center-screen">
-      <div className="brand-mark">F</div>
-      <span className="label">Loading FitPulse…</span>
-    </div>
-  );
+  if (loading) return <Splash />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!user.profile?.age) return <Navigate to="/onboarding" replace />;
   return children;
@@ -31,7 +28,7 @@ const PrivateRoute = ({ children }) => {
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <Splash />;
 
   return (
     <Routes>
@@ -59,10 +56,12 @@ const AppRoutes = () => {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
