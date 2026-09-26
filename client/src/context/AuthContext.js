@@ -7,7 +7,11 @@ export const useAuth = () => useContext(AuthContext);
 
 // Backend origin. Set REACT_APP_API_URL on Vercel (inlined at build time by
 // Create React App); local dev falls back to the Express server on :5001.
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001').replace(/\/$/, '');
+// A trailing slash or `/api` suffix is stripped so either form works.
+const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001')
+  .trim()
+  .replace(/\/+$/, '')
+  .replace(/\/api$/, '');
 
 const api = axios.create({ baseURL: `${API_URL}/api` });
 
