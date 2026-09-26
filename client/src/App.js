@@ -11,6 +11,9 @@ import SleepPage from './pages/SleepPage';
 import StepsPage from './pages/StepsPage';
 import ProfilePage from './pages/ProfilePage';
 import OnboardingPage from './pages/OnboardingPage';
+import RecipesPage from './pages/RecipesPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -32,6 +35,9 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" /> : <AuthPage />} />
+      {/* Password reset: public; reset stays reachable even if a session exists */}
+      <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={user && !user.profile?.age ? <OnboardingPage /> : <Navigate to="/" />} />
       <Route path="/" element={<PrivateRoute><AppShell /></PrivateRoute>}>
         <Route index element={<Dashboard />} />
@@ -40,6 +46,7 @@ const AppRoutes = () => {
         <Route path="water" element={<WaterPage />} />
         <Route path="sleep" element={<SleepPage />} />
         <Route path="steps" element={<StepsPage />} />
+        <Route path="recipes" element={<RecipesPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { api, useAuth } from '../context/AuthContext';
 import WeekBars from '../components/WeekBars';
+import RangeToggle from '../components/RangeToggle';
+import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
 const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -11,15 +13,19 @@ export default function SleepPage() {
   const [form, setForm] = useState({ bedtime: '22:30', wakeTime: '06:30', quality: 4, notes: '' });
   const [saving, setSaving] = useState(false);
   const [weekLogs, setWeekLogs] = useState([]);
+  const [range, setRange] = useState(7); // 7 or 30 nights of history
   const [editMode, setEditMode] = useState(false);
 
   const sleepTarget = user?.sleepTarget || 8;
 
   useEffect(() => {
     api.get(`/sleep/${today}`).then(r => { setLog(r.data); if (r.data) setEditMode(false); }).catch(() => {});
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    api.get(`/sleep/history/week?startDate=${start}`).then(r => setWeekLogs(r.data)).catch(() => {});
   }, []);
+
+  // History chart: refetch whenever the 7D/30D toggle changes
+  useEffect(() => {
+    api.get(`/sleep/history/week?startDate=${rangeStart(range)}&days=${range}`).then(r => setWeekLogs(r.data)).catch(() => {});
+  }, [range]);
 
   const calcDuration = (bed, wake) => {
     const [bh, bm] = bed.split(':').map(Number);
@@ -50,16 +56,13 @@ export default function SleepPage() {
   const duration = log?.duration || calcDuration(form.bedtime, form.wakeTime);
   const isGood = duration >= sleepTarget;
 
-  const weekChartData = Array.from({ length: 7 }, (_, i) => {
-    const d = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
-    const found = weekLogs.find(l => l.date === d);
-    return { day: format(subDays(new Date(), 6 - i), 'EEE'), date: d, hours: found?.duration || 0, quality: found?.quality || 0 };
-  });
+  const weekChartData = dailySeries(weekLogs, range, 'hours', l => l.duration);
 
   const qualityStars = (q) => '★'.repeat(q) + '☆'.repeat(5 - q);
 
   const fmtTime = (d) => d ? new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
-  const avg7 = (weekChartData.reduce((s, d) => s + d.hours, 0) / 7).toFixed(1);
+  // Average over nights that were actually logged in the selected range
+  const avg7 = loggedAverage(weekChartData, 'hours').toFixed(1);
 
   return (
     <div className="fade-up">
@@ -151,7 +154,7 @@ export default function SleepPage() {
                 { label: 'Target', val: sleepTarget, unit: 'h' },
                 { label: 'Duration', val: log?.duration ?? '—', unit: log?.duration ? 'h' : '' },
                 { label: 'Deficit', val: log?.duration ? Math.max(sleepTarget - log.duration, 0) : '—', unit: log?.duration ? 'h' : '', coral: log?.duration < sleepTarget },
-                { label: 'Avg (7d)', val: avg7, unit: 'h' },
+                { label: `Avg (${range}d)`, val: avg7, unit: 'h' },
               ].map(m => (
                 <div key={m.label} className="card stat-tile">
                   <div className="k">{m.label}</div>
@@ -164,7 +167,13 @@ export default function SleepPage() {
 
         {/* Weekly chart */}
         <div className="card">
-          <div className="card-h"><h3>7-night history</h3><span className="label">avg {avg7}h · target {sleepTarget}h</span></div>
+          <div className="card-h">
+            <div>
+              <h3>{range}-night history</h3>
+              <span className="label">avg {avg7}h · target {sleepTarget}h</span>
+            </div>
+            <RangeToggle value={range} onChange={setRange} />
+          </div>
           <WeekBars data={weekChartData} xKey="day" yKey="hours" label="Sleep" target={sleepTarget}
             isToday={d => d.date === today} format={v => `${v}h`} />
         </div>

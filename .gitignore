@@ -9,3 +9,6 @@ node_modules
 client/build
 
 .DS_Store
+
+# Local AI-assistant notes (kept out of the repo)
+CLAUDE.md

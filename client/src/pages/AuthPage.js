@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleButton from '../components/GoogleButton';
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
+  const { login, register, googleLogin } = useAuth();
+
+  // Google returns an ID token; the server verifies it and signs us in.
+  const onGoogle = async (credential) => {
+    setError(''); setLoading(true);
+    try { await googleLogin(credential); }
+    catch (err) { setError(err.response?.data?.message || 'Google sign-in failed'); }
+    finally { setLoading(false); }
+  };
 
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
@@ -63,12 +73,21 @@ export default function AuthPage() {
               <input type="password" placeholder="••••••••" value={form.password} onChange={set('password')} required minLength={6} />
             </div>
 
+            {mode === 'login' && (
+              <div style={{ textAlign: 'right', margin: '-6px 0 14px' }}>
+                <Link to="/forgot-password" className="link-btn">Forgot password?</Link>
+              </div>
+            )}
+
             {error && <div className="alert">{error}</div>}
 
             <button type="submit" className="btn primary block" disabled={loading}>
               {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
             </button>
           </form>
+
+          <GoogleButton onCredential={onGoogle} onError={setError}
+            text={mode === 'login' ? 'signin_with' : 'signup_with'} />
         </div>
       </section>
     </div>

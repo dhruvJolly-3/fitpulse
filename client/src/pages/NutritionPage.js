@@ -3,6 +3,8 @@ import { format, subDays, addDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import Ring from '../components/Ring';
 import WeekBars from '../components/WeekBars';
+import RangeToggle from '../components/RangeToggle';
+import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
 const MEAL_ICONS = { breakfast: '☀️', lunch: '🌤️', dinner: '🌙', snack: '🍎', pre_workout: '⚡', post_workout: '💪' };
@@ -41,6 +43,7 @@ export default function NutritionPage() {
   const [custom, setCustom] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', quantity: 100 });
   const [addMode, setAddMode] = useState('search'); // 'search' | 'custom'
   const [weekData, setWeekData] = useState([]);
+  const [range, setRange] = useState(7); // 7 or 30 days of history
 
   const fetchLog = async (d) => {
     const { data } = await api.get(`/nutrition/${d}`);
@@ -49,12 +52,12 @@ export default function NutritionPage() {
 
   useEffect(() => { fetchLog(date); }, [date]);
 
+  // Calorie history: one bar per day (un-logged days = 0), refetched on 7D/30D toggle
   useEffect(() => {
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    api.get(`/nutrition/summary/week?startDate=${start}`)
-      .then(r => setWeekData(r.data.map(d => ({ date: d.date.slice(5), cals: d.totals?.calories || 0 }))))
+    api.get(`/nutrition/summary/week?startDate=${rangeStart(range)}&days=${range}`)
+      .then(r => setWeekData(dailySeries(r.data, range, 'cals', l => l.totals?.calories)))
       .catch(() => {});
-  }, []);
+  }, [range]);
 
   const addFood = async (food) => {
     await api.post(`/nutrition/${date}/food`, { ...food, mealType, time: new Date().toISOString() });
@@ -199,9 +202,15 @@ export default function NutritionPage() {
           {/* Weekly chart */}
           {weekData.length > 0 && (
             <div className="card span-5">
-              <div className="card-h"><h3>7-day calories</h3><span className="label">target {calTarget}</span></div>
-              <WeekBars data={weekData} xKey="date" yKey="cals" label="Calories" target={calTarget} colorByTarget={false}
-                isToday={d => d.date === format(new Date(), 'MM-dd')} format={v => `${Math.round(v)} kcal`} />
+              <div className="card-h">
+                <div>
+                  <h3>{range}-day calories</h3>
+                  <span className="label">target {calTarget} · avg {Math.round(loggedAverage(weekData, 'cals'))}</span>
+                </div>
+                <RangeToggle value={range} onChange={setRange} />
+              </div>
+              <WeekBars data={weekData} xKey="day" yKey="cals" label="Calories" target={calTarget} colorByTarget={false}
+                isToday={d => d.date === format(new Date(), 'yyyy-MM-dd')} format={v => `${Math.round(v)} kcal`} />
             </div>
           )}
         </div>

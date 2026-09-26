@@ -12,7 +12,8 @@ export default function Ring({ value, max, size = 196, stroke = 15, color = 'var
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeDasharray={circ} strokeDashoffset={circ - pct * circ} strokeLinecap="round"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.2,0.7,0.2,1)' }} />
+          // --ring-circ lets the CSS `ringDraw` animation start from an empty ring
+          style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.2,0.7,0.2,1)', '--ring-circ': circ }} />
       </svg>
       <div className="center">{children}</div>
     </div>
