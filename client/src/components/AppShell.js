@@ -1,6 +1,10 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { MusicProvider } from '../music/YouTubeMusicContext';
+import { SpotifyProvider } from '../music/SpotifyContext';
+import MiniPlayer from './MiniPlayer';
+import InstallPrompt from './InstallPrompt';
 
 const NAV = [
   { path: '/', label: 'Dashboard', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> },
@@ -27,7 +31,10 @@ export default function AppShell() {
 
   const isActive = (path) => path === '/' ? pathname === '/' : pathname.startsWith(path);
 
+  // Music providers wrap the whole shell so playback survives page changes
   return (
+    <MusicProvider>
+    <SpotifyProvider>
     <div className="app-shell">
       {/* Sidebar rail */}
       <aside className="sidebar">
@@ -71,6 +78,7 @@ export default function AppShell() {
       {/* Main */}
       <main className="main-content">
         {/* Re-keyed on every route so the .route-view entrance animation replays */}
+        <InstallPrompt />
         <div key={pathname} className="route-view">
           <Outlet />
         </div>
@@ -85,6 +93,9 @@ export default function AppShell() {
           </button>
         ))}
       </nav>
+      <MiniPlayer />
     </div>
+    </SpotifyProvider>
+    </MusicProvider>
   );
 }
