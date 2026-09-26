@@ -547,6 +547,7 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes shimmer { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
 
 @media (prefers-reduced-motion: reduce) {
+  .pulse * { animation: none !important; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; }
 }
 
@@ -764,6 +765,10 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes beatDraw { 0% { stroke-dashoffset: 70; } 45%, 100% { stroke-dashoffset: 0; } }
 @keyframes ringOut { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.7); opacity: 0; } }
 
+.splash-mascot { position: relative; margin-bottom: -6px; }
+/* Splash is always dark: limbs in cream */
+.splash .pulse .p-limb, .splash .pulse .p-limb line { stroke: var(--on-dark); }
+.splash .pulse .p-shadow { fill: #000; opacity: 0.45; }
 .splash-word { position: relative; font-family: var(--display); font-weight: 800; font-size: 34px; letter-spacing: -0.04em; margin-top: 10px; animation: numIn 0.7s var(--ease-out) both; }
 .splash-word b { color: var(--coral); }
 .splash-line { position: relative; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-60); animation: numIn 0.45s var(--ease-out) both; }
@@ -803,6 +808,95 @@ input[type="number"] { -moz-appearance: textfield; }
 .sheet-item svg { width: 20px; height: 20px; }
 .sheet-item.active { background: var(--matcha); color: var(--obsidian); border-color: var(--matcha); }
 .sheet-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+
+/* ===========================================================
+   Pulse mascot (components/Pulse.js)
+   Each part pivots around its own joint via transform-box.
+   =========================================================== */
+.pulse { overflow: visible; flex-shrink: 0; }
+.pulse * { transform-box: fill-box; }
+.pulse .p-all { transform-origin: 50% 100%; }
+.pulse .p-arm-l { transform-origin: 100% 0%; }
+.pulse .p-arm-r { transform-origin: 0% 0%; }
+.pulse .p-leg { transform-origin: 50% 0%; }
+.pulse .p-eyes { transform-origin: 50% 50%; animation: pBlink 4s infinite; }
+@keyframes pBlink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+.pulse .p-ecg { animation: pEcg 1.2s ease-in-out infinite; }
+@keyframes pEcg { 0%, 100% { opacity: 0.35; } 20% { opacity: 0.8; } }
+:root[data-theme="dark"] .pulse .p-shadow { fill: #000; opacity: 0.4; }
+/* Dark mode: limbs and props switch to cream so they don't vanish on the dark canvas */
+:root[data-theme="dark"] .pulse .p-limb, :root[data-theme="dark"] .pulse .p-limb line { stroke: var(--on-dark); }
+:root[data-theme="dark"] .pulse .p-prop line { stroke: var(--on-dark); }
+:root[data-theme="dark"] .pulse .p-prop rect { fill: var(--on-dark); }
+:root[data-theme="dark"] .pulse .p-bowl path:first-child { stroke: var(--on-dark); }
+:root[data-theme="dark"] .pulse .p-steam { stroke: var(--on-dark); }
+
+/* wave */
+.pulse-wave .p-all { animation: pBob 2.4s ease-in-out infinite; }
+.pulse-wave .p-arm-r { animation: pWave 1.6s ease-in-out infinite; }
+@keyframes pBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes pWave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-70deg); } 50% { transform: rotate(-45deg); } 75% { transform: rotate(-70deg); } }
+
+/* run */
+.pulse-run .p-all { animation: pRunBob 0.5s ease-in-out infinite; }
+.pulse-run .p-leg-l { animation: pStride 0.5s ease-in-out infinite; }
+.pulse-run .p-leg-r { animation: pStride 0.5s ease-in-out infinite reverse; }
+.pulse-run .p-arm-l { animation: pSwing 0.5s ease-in-out infinite; }
+.pulse-run .p-arm-r { animation: pSwing 0.5s ease-in-out infinite reverse; }
+.pulse-run .p-speed { animation: pSpeed 0.5s linear infinite; }
+.pulse-run .p-shadow { animation: pShadow 0.5s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes pRunBob { 0%, 100% { transform: translateY(0) rotate(4deg); } 50% { transform: translateY(-5px) rotate(4deg); } }
+@keyframes pStride { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(-28deg); } }
+@keyframes pSwing { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(30deg); } }
+@keyframes pSpeed { from { transform: translateX(6px); opacity: 0.1; } 50% { opacity: 0.4; } to { transform: translateX(-6px); opacity: 0; } }
+@keyframes pShadow { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.8); } }
+
+/* lift */
+.pulse-lift .p-all { animation: pSquat 1.4s ease-in-out infinite; }
+.pulse-lift .p-arm-l { animation: pCurlL 1.4s ease-in-out infinite; }
+.pulse-lift .p-arm-r { animation: pCurlR 1.4s ease-in-out infinite; }
+@keyframes pSquat { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.94) translateY(3px); } }
+@keyframes pCurlL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(95deg); } }
+@keyframes pCurlR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-95deg); } }
+
+/* sleep */
+.pulse-sleep .p-all { animation: pBreathe 3.2s ease-in-out infinite; }
+.pulse-sleep .p-ecg { animation-duration: 5s; }
+.pulse-sleep .p-z { opacity: 0; animation: pZ 3s ease-in infinite; }
+.pulse-sleep .p-z2 { animation-delay: 1s; } .pulse-sleep .p-z3 { animation-delay: 2s; }
+@keyframes pBreathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
+@keyframes pZ { 0% { opacity: 0; transform: translate(0, 6px); } 30% { opacity: 0.8; } 100% { opacity: 0; transform: translate(6px, -10px); } }
+:root[data-theme="dark"] .pulse .p-zs { fill: var(--on-dark); }
+
+/* drink */
+.pulse-drink .p-all { animation: pBob 2.4s ease-in-out infinite; }
+.pulse-drink .p-arm-r { animation: pSip 2.4s ease-in-out infinite; }
+.pulse-drink .p-water { animation: pWaterLvl 2.4s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes pSip { 0%, 30%, 100% { transform: rotate(0); } 50%, 80% { transform: rotate(-58deg); } }
+@keyframes pWaterLvl { 0%, 40% { transform: translateY(0); } 80%, 100% { transform: translateY(6px); } }
+
+/* eat */
+.pulse-eat .p-arm-r { animation: pSpoon 1.3s ease-in-out infinite; }
+.pulse-eat .p-mouth-eat { animation: pChew 1.3s ease-in-out infinite; transform-origin: 50% 50%; }
+.pulse-eat .p-steam { animation: pSteam 2s ease-in-out infinite; }
+@keyframes pSpoon { 0%, 100% { transform: rotate(20deg); } 50% { transform: rotate(-48deg); } }
+@keyframes pChew { 0%, 40%, 100% { transform: scaleY(0.4); } 55%, 70% { transform: scaleY(1); } }
+@keyframes pSteam { 0%, 100% { opacity: 0.2; transform: translateY(0); } 50% { opacity: 0.6; transform: translateY(-3px); } }
+
+/* cheer */
+.pulse-cheer .p-all { animation: pJump 0.9s cubic-bezier(0.3, 0, 0.3, 1) infinite; }
+.pulse-cheer .p-arm-l { transform: rotate(80deg); }
+.pulse-cheer .p-arm-r { transform: rotate(-80deg); }
+.pulse-cheer .p-confetti > * { animation: pConfetti 1.8s ease-in-out infinite; transform-origin: 50% 50%; }
+.pulse-cheer .p-confetti > :nth-child(2n) { animation-delay: 0.4s; }
+.pulse-cheer .p-confetti > :nth-child(3n) { animation-delay: 0.8s; }
+@keyframes pJump { 0%, 100% { transform: translateY(0) scaleY(1); } 15% { transform: translateY(0) scaleY(0.9); } 45% { transform: translateY(-14px) scaleY(1.04); } 75% { transform: translateY(0) scaleY(1); } }
+@keyframes pConfetti { 0%, 100% { transform: translateY(0) rotate(0); opacity: 1; } 50% { transform: translateY(8px) rotate(120deg); opacity: 0.6; } }
+
+/* Page headers: mascot next to the title */
+.page-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.page-heading .pulse { width: 58px; height: 58px; margin: -6px 0; }
+@media (max-width: 600px) { .page-heading .pulse { width: 46px; height: 46px; } }
 
 /* ===========================================================
    Responsive

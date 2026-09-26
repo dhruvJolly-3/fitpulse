@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { format, subDays, addDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import Ring from '../components/Ring';
@@ -99,9 +100,12 @@ export default function NutritionPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="eat" />
+          <div>
           <h1 className="page-title">Nutrition</h1>
           <div className="page-date">track every bite, hit your macros</div>
+        </div>
         </div>
         <div className="page-actions">
           <button className="icon-btn bordered" onClick={() => setDate(format(subDays(new Date(date), 1), 'yyyy-MM-dd'))} title="Previous day">
@@ -191,7 +195,7 @@ export default function NutritionPage() {
 
             {(log?.foods?.length === 0 || !log) && (
               <div className="empty">
-                <div className="ic">🍽️</div>
+                <div className="ic"><Pulse mood="eat" size={92} /></div>
                 <h3>No meals logged <span className="serif-it">yet</span></h3>
                 <p>Start tracking to hit your {calTarget} kcal goal.</p>
                 <button className="btn primary" onClick={() => setShowAdd(true)}>Log your first meal</button>

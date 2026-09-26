@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Pulse from './Pulse';
 
 // Full-screen loading screen shown while FitPulse checks your session.
 // A heartbeat line draws across the screen, the logo pulses in time, and
@@ -33,13 +34,8 @@ export default function Splash() {
         <circle className="dot" r="6" />
       </svg>
 
-      <div className="splash-mark">
-        <span className="ring" /><span className="ring r2" />
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="var(--matcha)" />
-          <path className="beat" d="M11 33h13l5-12 7 23 5-11h12" fill="none" stroke="var(--obsidian)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
+      {/* Pulse the mascot jogging on the heartbeat line */}
+      <div className="splash-mascot"><Pulse mood="run" size={132} /></div>
 
       <div className="splash-word">FitPulse<b>.</b></div>
       <div className="splash-line" key={line}>
