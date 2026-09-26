@@ -1,7 +1,7 @@
 import React from 'react';
 
-// "Pulse", the FitPulse mascot: a lime squircle with the brand heartbeat on
-// its belly. Pure SVG + CSS (no image files, ~2KB), so it matches the brand
+// "Pulse", the FitPulse mascot: a lime gym bro with a V-taper, a black tank
+// top carrying the brand heartbeat, a sweatband and big biceps. Pure SVG + CSS (no image files, ~2KB), so it matches the brand
 // colours, works in dark mode and stays crisp at any size.
 //
 // mood:
@@ -30,67 +30,89 @@ export default function Pulse({ mood = 'wave', size = 96, className = '', title 
       <g className="p-all">
         {/* legs */}
         <g className="p-limb" stroke={INK} strokeWidth="6" strokeLinecap="round">
-          <line className="p-leg p-leg-l" x1="48" y1="88" x2="46" y2="106" />
-          <line className="p-leg p-leg-r" x1="72" y1="88" x2="74" y2="106" />
+          <line className="p-leg p-leg-l" x1="47" y1="88" x2="45" y2="106" />
+          <line className="p-leg p-leg-r" x1="73" y1="88" x2="75" y2="106" />
         </g>
 
         {/* left arm (+ prop) */}
         <g className="p-arm p-arm-l">
-          <line className="p-limb" x1="31" y1="62" x2="18" y2="74" stroke={INK} strokeWidth="6" strokeLinecap="round" />
-          {mood === 'lift' && <Dumbbell x={18} y={74} />}
+          <line className="p-limb" x1="27" y1="56" x2="14" y2="74" stroke={INK} strokeWidth="7" strokeLinecap="round" />
+          <Bicep cx={22} cy={60} flip />
+          {mood === 'lift' && <Dumbbell x={14} y={74} />}
         </g>
 
         {/* body */}
         <g className="p-body">
-          <rect x="28" y="24" width="64" height="68" rx="26" fill={LIME} stroke={INK} strokeWidth="4" />
-          {/* belly heartbeat */}
-          <path className="p-ecg" d="M44 80h7l3-6 4 11 3-5h14" fill="none" stroke={INK} strokeWidth="2.5" opacity="0.55"
+          {/* V-taper: broad shoulders, narrower waist */}
+          <path d="M22 38Q22 20 40 20H80Q98 20 98 38L92 78Q90 92 76 92H44Q30 92 28 78Z" fill={LIME} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+          {/* tank top: thin straps, deep cut so the lime chest shows */}
+          <g fill={INK}>
+            <path d="M33 24h7l3 34h-9z" /><path d="M80 24h7l-1 34h-9z" />
+            <path d="M28 56Q60 66 92 56L90 78Q88 90 76 90H44Q32 90 30 78Z" />
+          </g>
+          {/* pecs */}
+          <path d="M45 57Q52 61 60 57Q68 61 75 57" fill="none" stroke={INK} strokeWidth="2" opacity="0.35" strokeLinecap="round" />
+          {/* heartbeat on the tank */}
+          <path className="p-ecg" d="M42 76h8l3-6 4 11 3-5h16" fill="none" stroke={LIME} strokeWidth="2.5"
             strokeLinecap="round" strokeLinejoin="round" />
+          {/* sweatband */}
+          {!sleeping && <path d="M24 30Q24 24 32 24H88Q96 24 96 30V33H24Z" fill={CORAL} stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />}
           {/* face */}
           {sleeping ? (
             <g stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none">
-              <path d="M44 48q5 4 10 0" /><path d="M66 48q5 4 10 0" />
+              <path d="M44 41q5 4 10 0" /><path d="M66 41q5 4 10 0" />
             </g>
           ) : (
-            <g className="p-eyes" fill={INK}>
-              <ellipse cx="49" cy="47" rx="4" ry="5" /><ellipse cx="71" cy="47" rx="4" ry="5" />
-              <circle cx="50.5" cy="45.5" r="1.4" fill={CREAM} /><circle cx="72.5" cy="45.5" r="1.4" fill={CREAM} />
-            </g>
+            <>
+              {/* determined brows */}
+              <g stroke={INK} strokeWidth="3" strokeLinecap="round">
+                <line x1="43" y1="36" x2="54" y2="38" /><line x1="66" y1="38" x2="77" y2="36" />
+              </g>
+              <g className="p-eyes" fill={INK}>
+                <ellipse cx="49" cy="42" rx="3.5" ry="4" /><ellipse cx="71" cy="42" rx="3.5" ry="4" />
+                <circle cx="50.3" cy="40.8" r="1.2" fill={CREAM} /><circle cx="72.3" cy="40.8" r="1.2" fill={CREAM} />
+              </g>
+            </>
           )}
           {/* cheeks */}
-          <circle cx="42" cy="56" r="3.5" fill={CORAL} opacity="0.55" />
-          <circle cx="78" cy="56" r="3.5" fill={CORAL} opacity="0.55" />
+          <circle cx="41" cy="48" r="3" fill={CORAL} opacity="0.5" />
+          <circle cx="79" cy="48" r="3" fill={CORAL} opacity="0.5" />
           {/* mouth */}
           {eating
-            ? <ellipse className="p-mouth-eat" cx="60" cy="58" rx="4.5" ry="3.5" fill={INK} />
+            ? <ellipse className="p-mouth-eat" cx="60" cy="48" rx="4.5" ry="3.5" fill={INK} />
             : sleeping
-              ? <circle cx="60" cy="58" r="2.2" fill={INK} />
-              : <path d="M51 56q9 10 18 0z" fill={INK} stroke={INK} strokeWidth="2" strokeLinejoin="round" />}
-          {/* run: sweatband */}
-          {mood === 'run' && <rect x="30" y="31" width="60" height="7" rx="3.5" fill={CORAL} />}
+              ? <circle cx="60" cy="48" r="2.2" fill={INK} />
+              : (
+                <g>
+                  {/* confident grin */}
+                  <path d="M50 46q10 9 20 0z" fill={INK} stroke={INK} strokeWidth="2" strokeLinejoin="round" />
+                  <path d="M52 46.5h16v2.2q-8 2.2-16 0z" fill={CREAM} />
+                </g>
+              )}
           {/* sleep: night cap */}
           {sleeping && (
             <g>
-              <path d="M34 34q6-22 36-16q10 2 18 16z" fill="#6f7bd8" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
-              <circle cx="94" cy="30" r="5" fill={CREAM} stroke={INK} strokeWidth="2.5" />
+              <path d="M26 30q6-24 42-18q14 2 24 18z" fill="#6f7bd8" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+              <circle cx="96" cy="27" r="5" fill={CREAM} stroke={INK} strokeWidth="2.5" />
             </g>
           )}
         </g>
 
         {/* right arm (+ prop) */}
         <g className="p-arm p-arm-r">
-          <line className="p-limb" x1="89" y1="62" x2="102" y2="74" stroke={INK} strokeWidth="6" strokeLinecap="round" />
-          {mood === 'lift' && <Dumbbell x={102} y={74} />}
+          <line className="p-limb" x1="93" y1="56" x2="106" y2="74" stroke={INK} strokeWidth="7" strokeLinecap="round" />
+          <Bicep cx={98} cy={60} />
+          {mood === 'lift' && <Dumbbell x={106} y={74} />}
           {mood === 'drink' && (
             <g>
-              <path d="M96 62h14l-2 18h-10z" fill="#bfe3ff" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
-              <path className="p-water" d="M97.5 68h11" stroke="#3aa0ff" strokeWidth="3" />
+              <path d="M100 62h14l-2 18h-10z" fill="#bfe3ff" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+              <path className="p-water" d="M101.5 68h11" stroke="#3aa0ff" strokeWidth="3" />
             </g>
           )}
           {eating && (
             <g>
-              <line x1="102" y1="74" x2="96" y2="60" stroke={INK} strokeWidth="3" strokeLinecap="round" />
-              <ellipse cx="95" cy="58" rx="4" ry="3" fill={INK} />
+              <line x1="106" y1="74" x2="100" y2="60" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+              <ellipse cx="99" cy="58" rx="4" ry="3" fill={INK} />
             </g>
           )}
         </g>
@@ -125,6 +147,14 @@ export default function Pulse({ mood = 'wave', size = 96, className = '', title 
         </g>
       )}
     </svg>
+  );
+}
+
+// A lime bicep bump on the upper arm
+function Bicep({ cx, cy, flip }) {
+  return (
+    <path className="p-bicep" transform={`translate(${cx} ${cy})${flip ? ' scale(-1 1)' : ''}`}
+      d="M-6 -6Q2 -12 7 -3Q9 4 2 7Q-4 8 -7 2Z" fill={LIME} stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />
   );
 }
 

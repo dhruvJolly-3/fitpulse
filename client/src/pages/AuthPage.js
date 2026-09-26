@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import GoogleButton from '../components/GoogleButton';
@@ -19,6 +19,20 @@ export default function AuthPage() {
     finally { setLoading(false); }
   };
 
+  // Parallax: write the pointer position (-1..1 across the window) to CSS
+  // variables on the page root, once per frame. Both halves read them.
+  const page = useRef(null);
+  const frame = useRef(0);
+  const onMove = (e) => {
+    const { clientX, clientY } = e;
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      if (!page.current) return;
+      page.current.style.setProperty('--mx', ((clientX / window.innerWidth) * 2 - 1).toFixed(3));
+      page.current.style.setProperty('--my', ((clientY / window.innerHeight) * 2 - 1).toFixed(3));
+    });
+  };
+
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const submit = async (e) => {
@@ -33,7 +47,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="auth">
+    <div className="auth auth-par" ref={page} onMouseMove={onMove}>
       <AuthHero />
 
       <section className="auth-form">

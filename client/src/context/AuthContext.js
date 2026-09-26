@@ -29,9 +29,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('fp_token');
     if (token) {
-      api.get('/user/profile')
+      // Render's free tier can take ~a minute to wake up, so don't hold the
+      // splash screen forever: give up after 20s and show the sign-in page.
+      // Only drop the token when the server actually rejects it (401).
+      api.get('/user/profile', { timeout: 20000 })
         .then(r => setUser(r.data))
-        .catch(() => localStorage.removeItem('fp_token'))
+        .catch(err => { if (err.response?.status === 401) localStorage.removeItem('fp_token'); })
         .finally(() => setLoading(false));
     } else setLoading(false);
   }, []);

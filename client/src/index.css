@@ -905,13 +905,14 @@ input[type="number"] { -moz-appearance: textfield; }
 /* ===========================================================
    Animated auth / landing hero (components/AuthHero.js)
    =========================================================== */
-.ah { position: relative; overflow: hidden; --mx: 0; --my: 0; }
+.auth-par { --mx: 0; --my: 0; }
+.ah { position: relative; overflow: hidden; }
 .ah .brand { position: relative; z-index: 2; align-items: center; }
 .ah-pulse { margin-left: 6px; animation: numIn 0.6s var(--ease-out) 0.8s both; }
 .ah-pulse .p-limb, .ah-pulse .p-limb line { stroke: var(--on-dark); }
 
 /* headline: each word rises out of a mask */
-.ah-copy { position: relative; z-index: 2; }
+.ah-copy { position: relative; z-index: 2; translate: calc(var(--mx, 0) * 10px) calc(var(--my, 0) * 6px); transition: translate 0.9s cubic-bezier(.2,.7,.2,1); }
 .ah h1 { animation: none; }
 .ah-word { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; margin-bottom: -0.08em; }
 .ah-word > span { display: inline-block; animation: ahRise 0.9s var(--ease-out) both; }
@@ -929,7 +930,7 @@ input[type="number"] { -moz-appearance: textfield; }
 .ah > *:not(.ah-bg) { position: relative; z-index: 2; }
 .ah-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .ah-bg img {
-  position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: none;
+  position: absolute; top: -2%; right: -28px; height: 104%; width: auto; max-width: none;
   transform: translate(calc(var(--mx) * -14px), calc(var(--my) * -10px));
   transition: transform 0.6s var(--ease-out);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 40%); mask-image: linear-gradient(90deg, transparent, #000 40%);
@@ -945,53 +946,18 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 @keyframes ahBgIn { from { opacity: 0; scale: 1.12; filter: blur(6px); } to { opacity: 1; scale: 1; filter: blur(0); } }
 @keyframes ahBreath { 0%, 100% { scale: 1; } 50% { scale: 1.04; } }
-.ah-art { position: relative; display: flex; flex-wrap: nowrap; gap: 10px; align-items: flex-start; margin: 28px 0; z-index: 1; pointer-events: none; }
-.ah-art .ah-card { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.ah-art .ah-card { position: relative; top: auto; left: auto; right: auto; bottom: auto; }
-.ah-card {
-  position: absolute;
-  transform: translate(calc(var(--mx) * var(--d) * 10px), calc(var(--my) * var(--d) * 8px));
-  transition: transform 0.6s var(--ease-out);
-  animation: ahCardIn 0.9s var(--ease-spring) both;
-}
-@keyframes ahCardIn { from { opacity: 0; scale: 0.85; } to { opacity: 1; scale: 1; } }
-.ah-float {
-  position: relative; overflow: hidden;
-  background: linear-gradient(160deg, rgba(40, 52, 56, 0.55), rgba(12, 14, 16, 0.7));
-  border: 1px solid rgba(140, 220, 225, 0.18); border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140, 220, 225, 0.12);
-  padding: 10px 12px; backdrop-filter: blur(6px) saturate(0.8); -webkit-backdrop-filter: blur(6px) saturate(0.8);
-  animation: ahBob 7s ease-in-out infinite;
-}
-/* neon glint that sweeps across, like the tube light in the artwork */
-.ah-float::after {
-  content: ''; position: absolute; inset: -40% auto -40% -60%; width: 40%;
-  background: linear-gradient(90deg, transparent, rgba(140, 220, 225, 0.14), transparent);
-  transform: rotate(18deg); animation: ahGlint 7s ease-in-out infinite;
-}
-@keyframes ahGlint { 0%, 70% { left: -60%; } 100% { left: 130%; } }
-@keyframes ahBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
-.ah-k { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(160, 215, 218, 0.6); margin-bottom: 7px; }
-
-.ah-cal { top: 0; left: 0; animation-delay: 0.3s; rotate: -3deg; }
-.ah-grid { display: grid; grid-template-columns: repeat(7, 11px); gap: 4px; }
-.ah-grid i { width: 11px; height: 11px; border-radius: 3px; background: var(--cream-12); animation: ahDay 4.8s ease-in-out infinite; }
-.ah-grid i.rest { animation-name: ahRest; }
-@keyframes ahDay { 0%, 8% { background: var(--cream-12); transform: scale(0.8); } 14%, 88% { background: rgba(200, 224, 100, 0.85); box-shadow: 0 0 6px rgba(200, 224, 100, 0.35); transform: none; } 100% { background: var(--cream-12); } }
-@keyframes ahRest { 0%, 8% { background: var(--cream-12); } 14%, 88% { background: rgba(241,235,222,0.28); } 100% { background: var(--cream-12); } }
-
-.ah-ring { top: 20px; right: 0; animation-delay: 0.5s; rotate: 4deg; margin-top: 26px; }
-.ah-ring .ah-float { display: flex; flex-direction: column; align-items: center; padding: 10px; }
-.ah-ring svg { width: 52px; height: 52px; filter: drop-shadow(0 0 4px rgba(200, 224, 100, 0.35)); transform: rotate(-90deg); }
-.ah-ring circle { fill: none; stroke-width: 9; stroke-linecap: round; }
-.ah-ring .track { stroke: var(--cream-12); }
-.ah-ring .fill { stroke: var(--matcha); stroke-dasharray: 201; animation: ahRing 4s var(--ease-out) infinite; }
-.ah-ring .ah-k { margin: 6px 0 0; }
-@keyframes ahRing { 0% { stroke-dashoffset: 201; } 60%, 85% { stroke-dashoffset: 40; } 100% { stroke-dashoffset: 201; } }
-
 /* right-side backdrop of the auth page */
 .auth-form { position: relative; overflow: hidden; }
-.auth-form .inner { position: relative; z-index: 1; }
+.auth-form .inner { position: relative; z-index: 1; translate: calc(var(--mx, 0) * -6px) calc(var(--my, 0) * -4px); transition: translate 1s cubic-bezier(.2,.7,.2,1); }
+/* parallax depth for the backdrop layers (transform is free: their own animations use translate/scale) */
+.af-smoke { transform: translate3d(calc(var(--mx, 0) * 30px), calc(var(--my, 0) * 20px), 0); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.af-glow.g1 { transform: translate3d(calc(var(--mx, 0) * -50px), calc(var(--my, 0) * -35px), 0); transition: transform 1.4s cubic-bezier(.2,.7,.2,1); }
+.af-glow.g2 { transform: translate3d(calc(var(--mx, 0) * 40px), calc(var(--my, 0) * 30px), 0); transition: transform 1.4s cubic-bezier(.2,.7,.2,1); }
+.af-pulse { transform: translate3d(calc(var(--mx, 0) * -18px), 0, 0); transition: transform 1s cubic-bezier(.2,.7,.2,1); }
+@media (prefers-reduced-motion: reduce) {
+  .ah-copy, .auth-form .inner { translate: none !important; }
+  .ah-bg img, .af-smoke, .af-glow, .af-pulse { transform: none !important; }
+}
 .af-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 /* haze bleeding in from the hero panel, so the two halves blend instead of cutting */
 .af-smoke {
@@ -1037,7 +1003,6 @@ input[type="number"] { -moz-appearance: textfield; }
 @media (max-width: 920px) {
   .ah { justify-content: flex-start; }
   .ah-bg img { right: -20%; opacity: 0.55; }
-  .ah-art { margin: 4px 0; gap: 10px; }
   .ah-ticker { margin: 0 -24px -32px; }
 }
 
