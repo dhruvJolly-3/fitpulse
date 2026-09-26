@@ -4,9 +4,9 @@
 
  Train. Eat. Sleep. Repeat.
 
-**One app for your whole fitness routine: nutrition, training, hydration, sleep and activity, tracked against targets calculated from your own body.**
+One app for your whole fitness routine: nutrition, training, hydration, sleep and activity, tracked against targets calculated from your own body.**
 
-[**🚀 Live App](https://fitpulse-ruddy.vercel.app) · [Features](#-features) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [API](#-api-reference)
+[🚀 Live App](https://fitpulse-ruddy.vercel.app) · [Features](#-features) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [API](#-api-reference)
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)
