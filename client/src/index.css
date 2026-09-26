@@ -559,6 +559,10 @@ input[type="number"] { -moz-appearance: textfield; }
 .link-btn { background: none; border: 0; padding: 0; color: var(--ink-50); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .link-btn:hover { color: var(--coral); }
 .google-slot { display: flex; justify-content: center; min-height: 44px; }
+/* Google's button lives in an iframe. With the page in dark color-scheme the
+   browser paints that iframe an opaque white box; forcing "light" here keeps
+   its background transparent so only the pill itself shows. */
+.google-slot, .google-slot iframe { color-scheme: light; background: transparent !important; }
 .notice { padding: 12px 14px; border-radius: var(--r-field); background: var(--bone); border: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; margin-bottom: 14px; animation: cardIn 0.4s var(--ease-out); }
 
 .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--gap); }

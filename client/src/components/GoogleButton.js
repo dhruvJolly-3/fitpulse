@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 // "Continue with Google" via Google Identity Services.
 // Only renders when REACT_APP_GOOGLE_CLIENT_ID is set at build time (it must
@@ -26,6 +27,8 @@ const loadScript = () => {
 export default function GoogleButton({ onCredential, onError, text = 'continue_with' }) {
   const slot = useRef(null);
   const [failed, setFailed] = useState(false);
+  // Match Google's button to the app theme; re-rendered when the theme changes
+  const { resolved } = useTheme();
 
   // Keep the latest callbacks without re-initialising Google on every render.
   const handlers = useRef({ onCredential, onError });
@@ -40,13 +43,14 @@ export default function GoogleButton({ onCredential, onError, text = 'continue_w
         client_id: CLIENT_ID,
         callback: (resp) => handlers.current.onCredential(resp.credential),
       });
+      slot.current.innerHTML = ''; // clear the previous button before re-rendering
       window.google.accounts.id.renderButton(slot.current, {
-        theme: 'outline', size: 'large', shape: 'pill', text,
+        theme: resolved === 'dark' ? 'filled_black' : 'outline', size: 'large', shape: 'pill', text,
         width: Math.min(slot.current.offsetWidth || 400, 400),
       });
     }).catch(err => { if (!cancelled) { setFailed(true); handlers.current.onError?.(err.message); } });
     return () => { cancelled = true; };
-  }, [text]);
+  }, [text, resolved]);
 
   if (!CLIENT_ID || failed) return null;
   return (
