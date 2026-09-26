@@ -19,7 +19,7 @@
 
 <br/>
 
-<img src="docs/screenshots/dashboard.png" alt="FitPulse dashboard" width="92%" />
+<img src="docs/screenshots/signin.png" alt="FitPulse sign-in page" width="92%" />
 
 </div>
 
@@ -35,7 +35,8 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
 - 🎧 **Built for the workout itself.** In-app exercise demos and a full music player with Spotify and YouTube.
 - 📱 **Install it like an app.** Add it to your home screen on iPhone or Android and it opens full-screen.
 - 🌗 **Light and dark mode.** Follows your system setting, or switch with one tap.
-- 🟢 **Meet Pulse.** Our mascot jogs, lifts, sips and snoozes across the app.
+- 🟢 **Meet Pulse.** Our gym-bro mascot jogs, lifts, sips and snoozes across the app.
+- ✨ **A landing page that moves.** Full-body hero artwork, rising headline and mouse parallax.
 
 ---
 
@@ -45,6 +46,10 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
 
 <table>
   <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/dashboard.png" alt="Dashboard" /><br/><b>Dashboard</b> · your whole day at a glance</td>
+    <td align="center" width="50%"><img src="docs/screenshots/dashboard-dark.png" alt="Dashboard in dark mode" /><br/><b>Dark mode</b> · dashboard</td>
+  </tr>
+  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/training.png" alt="Training and music player" /><br/><b>Training</b> · 30-day calendar, demos and music player</td>
     <td align="center" width="50%"><img src="docs/screenshots/nutrition.png" alt="Nutrition" /><br/><b>Nutrition</b> · calories, macros and meal log</td>
   </tr>
@@ -53,8 +58,7 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
     <td align="center"><img src="docs/screenshots/activity.png" alt="Activity" /><br/><b>Activity</b> · steps, distance and burn</td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/dashboard-dark.png" alt="Dashboard in dark mode" /><br/><b>Dark mode</b> · dashboard</td>
-    <td align="center"><img src="docs/screenshots/sleep-dark.png" alt="Sleep in dark mode" /><br/><b>Dark mode</b> · sleep</td>
+    <td align="center" colspan="2"><img src="docs/screenshots/sleep-dark.png" alt="Sleep in dark mode" width="50%" /><br/><b>Dark mode</b> · sleep</td>
   </tr>
 </table>
 
@@ -62,6 +66,7 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
 
 <table>
   <tr>
+    <td align="center"><img src="docs/screenshots/mobile-signin.png" alt="Mobile sign-in" width="220" /><br/>Sign in</td>
     <td align="center"><img src="docs/screenshots/mobile-dashboard.png" alt="Mobile dashboard" width="220" /><br/>Dashboard</td>
     <td align="center"><img src="docs/screenshots/mobile-nutrition.png" alt="Mobile nutrition" width="220" /><br/>Nutrition</td>
     <td align="center"><img src="docs/screenshots/mobile-training-dark.png" alt="Mobile training, dark" width="220" /><br/>Training + music</td>
@@ -69,11 +74,11 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
   </tr>
 </table>
 
-### Pulse, the FitPulse mascot
+### Pulse, the gym-bro mascot
 
 <img src="docs/screenshots/pulse-moods.png" alt="Pulse mascot moods" width="92%" />
 
-<sub>Wave · run · lift · sleep · drink · eat · cheer. Pulse appears on the loading screen, in every page header and on empty screens.</sub>
+<sub>Sweatband, tank top with the FitPulse heartbeat, V-taper and biceps. Wave · run · lift · sleep · drink · eat · cheer. Pulse appears on the loading screen, in every page header and on empty screens.</sub>
 
 <img src="docs/screenshots/splash.png" alt="Animated loading screen" width="70%" />
 
@@ -86,6 +91,13 @@ Most fitness apps make you juggle five different trackers. FitPulse puts everyth
 ---
 
 ## 🧩 Features
+
+### ✨ Landing and sign-in
+- Full-body gym artwork with a slow cinematic zoom
+- Headline words rise in one by one, and the last word cycles: *repeat → recover → rise*
+- **Parallax:** the artwork, headline, form and the smoke, glow and heartbeat backdrop all move with your mouse at different depths
+- Sign in / sign up toggle, Google sign-in and forgot password, all on one page
+- Motion switches off when the system's reduced-motion setting is on
 
 ### 📊 Dashboard
 Your day at a glance: calorie ring, macro progress, hydration, steps, sleep, TDEE, quick-log shortcuts and your workout streak.
@@ -135,11 +147,14 @@ Step logging with auto-calculated distance, calories burned and active minutes, 
 - Email and password sign-up with secure JWT sessions
 - **Sign in with Google**
 - **Forgot password** with a secure one-time email link
+- Rate-limited sign-in, sign-up and reset endpoints to block brute-force attempts
 
 ### 📱 App experience
 - **Installable (PWA)**: home-screen icon, full-screen launch, offline-ready shell and an install banner
 - **Light / dark mode** with a smooth cross-fade
 - **Animated loading screen** and **Pulse** the mascot on every page
+- **Fast first load:** if the free-tier API is still waking up, the app stops waiting after 20 seconds instead of hanging
+- Dates roll over at midnight on their own, even if the app stays open
 - Phone-first layout: bottom tab bar, "More" sheet, bottom-sheet dialogs and no zoom-on-tap
 - **Animated favicon** that pulses on sign-in, sign-out and while you use the app
 
@@ -153,9 +168,10 @@ Step logging with auto-calculated distance, calories burned and active minutes, 
 | **Styling** | Custom CSS design system (no UI framework) · light/dark themes · CSS animations · SVG mascot · Bricolage Grotesque, Instrument Serif, Inter Tight, JetBrains Mono |
 | **Backend** | Node.js · Express 4 · express-validator · Morgan |
 | **Database** | MongoDB Atlas · Mongoose |
-| **Auth and security** | JWT · bcrypt · Google Identity Services · SHA-256 hashed reset tokens · CORS allowlist · central error handling |
+| **Auth and security** | JWT · bcrypt · Google Identity Services · SHA-256 hashed reset tokens · rate limiting · CORS allowlist · central error handling |
 | **Integrations** | YouTube Data API v3 · YouTube IFrame Player API · Spotify Web API + Web Playback SDK (OAuth PKCE) · TheMealDB · Nodemailer (SMTP) |
 | **Browser APIs** | Service Worker · Web App Manifest · Media Session · Document Picture-in-Picture |
+| **Testing** | Node test runner API suite (auth, profile, logs, rate limits) |
 | **Hosting** | Vercel (frontend) · Render (API) |
 
 **Highlights**
@@ -214,6 +230,15 @@ npm run dev
 
 > Optional integrations stay off until their keys are set, so the app runs fully without them.
 
+### Running the tests
+
+The API test suite uses a separate database so it never touches real data:
+
+```bash
+cd server
+TEST_MONGODB_URI=mongodb://localhost:27017/fitpulse_test npm test
+```
+
 ---
 
 ## 🗂 Project Structure
@@ -224,7 +249,8 @@ fitpulse/
 │   ├── models/        User · NutritionLog · Training · Metrics
 │   ├── routes/        auth · user · nutrition · training · water · sleep
 │   │                  steps · goals · recipes · videos
-│   ├── middleware/    JWT auth · validation · error handling
+│   ├── middleware/    JWT auth · validation · rate limiting · error handling
+│   ├── tests/         API test suite
 │   └── utils/         mailer · cache · async handler
 │
 ├── client/
@@ -232,7 +258,7 @@ fitpulse/
 │   └── src/
 │       ├── pages/       Dashboard · Nutrition · Recipes · Training · Water
 │       │                Sleep · Steps · Profile · Onboarding · Auth
-│       ├── components/  Pulse (mascot) · Splash · MiniPlayer · MusicPanel
+│       ├── components/  AuthHero · Pulse (mascot) · Splash · MiniPlayer · MusicPanel
 │       │                PopoutPlayer · Ring · WeekBars · MonthCalendar
 │       │                ExerciseVideoModal · GoogleButton · InstallPrompt
 │       ├── music/       YouTube player · Spotify · YouTube playlists
@@ -276,6 +302,10 @@ All endpoints except auth and health need `Authorization: Bearer <token>`.
 - [x] In-app exercise demo videos
 - [x] Light / dark mode
 - [x] Animated loading screen, animated favicon and Pulse the mascot
+- [x] Animated landing page with hero artwork and mouse parallax
+- [x] Pulse redesigned as a gym bro
+- [x] Auth rate limiting, midnight date rollover and an API test suite
+- [x] Faster first load when the API is cold-starting
 
 **Next**
 - [ ] Google Health / Fitbit sync (steps, sleep, workouts)
