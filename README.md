@@ -1,199 +1,210 @@
-# 🏋️ FitPulse — Intelligent Fitness & Nutrition Tracker
+<div align="center">
 
-A full-stack **MERN** application for MacBook (web) and iPhone 17 (PWA/responsive).  
-Built for serious tracking: calories, macros, training programs, water, sleep, steps, and TDEE.
+  ⚡ FitPulse
 
----
+ Train. Eat. Sleep. Repeat.
 
-## ✨ Features
+**One app for your whole fitness routine: nutrition, training, hydration, sleep and activity, tracked against targets calculated from your own body.**
 
-### 🍽️ Nutrition Tracking
-- Log meals by type: Breakfast, Lunch, Dinner, Snack, Pre/Post Workout
-- Searchable food database (20+ Indian/global foods)
-- Custom food entry with full macro input
-- Daily calorie goal tracking vs TDEE
-- Macro breakdown: Protein / Carbs / Fat / Fiber
-- 7-day calorie history chart
-- Net calories (consumed − burnt)
+[**🚀 Live App](https://fitpulse-ruddy.vercel.app) · [Features](#-features) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [API](#-api-reference)
 
-### 🏋️ Training
-- **AI-generated programs** tailored to your goal + diet type:
-  - `lose_weight` + `non-veg` → Fat Burn Pro (5×/week, 12 weeks)
-  - `lose_weight` + `veg` → Lean & Green (5×/week, 10 weeks)
-  - `gain_muscle` + `non-veg` → Mass Builder Pro (6×/week, 16 weeks)
-- Exercise checklist with completion tracking
-- Log On Days, Rest Days, and Off Days
-- Streak counter 🔥
-- Weekly schedule overview
-- Recent workout history
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/API-Render-46E3B7?logo=render&logoColor=white)
 
-### 💧 Hydration
-- Quick-add buttons (150ml / 250ml / 350ml / 500ml)
-- Drink type tracking: Water, Green Tea, Coffee, Juice, Sports Drink
-- Animated water fill visualization
-- 7-day area chart
-- Entry deletion
-
-### 😴 Sleep
-- Log bedtime + wake time
-- Auto-calculated sleep duration
-- Quality rating (1–5 stars)
-- Sleep deficit tracking
-- 7-night bar chart
-- Apple Health integration guide
-
-### 👟 Activity / Steps
-- Manual step entry with auto-calculated distance + calories
-- Steps progress ring
-- 7-day step history
-- Active minutes tracking
-- Apple Fitness / HealthKit integration guide
-
-### 📊 Dashboard
-- Daily calorie ring with net/burnt display
-- Macro progress bars
-- Hydration, Steps, Sleep, TDEE tiles
-- Streak badge
-- Quick log shortcuts
-
-### 👤 Profile & Goals
-- Body stats: age, gender, height, weight, target weight
-- Goal selection: Lose Weight / Maintain / Build Muscle / Endurance
-- Diet type: Non-Veg / Veg / Vegan / Keto / Paleo
-- Activity level (used for TDEE)
-- **Auto TDEE calculation** (Mifflin-St Jeor formula)
-- **Auto macro targets** (30% protein / 40% carbs / 30% fat)
-- Custom daily targets: water, steps, sleep
+</div>
 
 ---
 
-## 🚀 Quick Start
+✨ Why FitPulse
 
-### Prerequisites
+Most fitness apps make you juggle five different trackers. FitPulse puts everything in one place and personalises it. Enter your body stats once, and every target you see (calories, macros, water, steps, sleep) is built from **your** numbers, not generic defaults.
+
+- 🎯 Personal by default.TDEE and macro targets are calculated from your age, height, weight, activity level and goal.
+- 📈 Progress you can see.Every metric has 7-day and 30-day views.
+- 🏋️ Training that fits your life.You choose your workout days, and the program adapts to your goal and diet.
+- 🎧 Built for the workout itself. Exercise demo videos and your own music, right inside the session.
+- ✨ Feels fast and fluid.** Motion-rich interface that respects your system's reduced-motion setting.
+
+---
+
+ 🧩 Features
+
+ 📊 Dashboard
+Your day at a glance: calorie ring, macro progress, hydration, steps, sleep, TDEE and your current workout streak.
+
+  🍽️ Nutrition
+- Log food by meal: breakfast, lunch, dinner, snacks, pre/post-workout
+- Quick-pick foods plus custom entries with full macros
+- Live protein / carbs / fat / fiber progress against your targets
+- Calorie trends over **7 or 30 days
+
+ 🍳 Recipes
+- Browse by cuisine (Indian, Chinese, Italian, Mexican, Thai and more) or search by name
+- Vegetarian and vegan collections surface automatically for veg and vegan diets
+- Full ingredient lists, step-by-step method and video links
+
+  🏋️ Training
+- Personalised programs** built from your goal and diet, on the days you pick
+- Push / pull / legs / core splits for muscle gain
+- Tap-to-complete exercise checklist, plus workout, rest and off-day logging
+- 🔥 Streak tracking and a 30-day consistency calendar
+- ▶️ Demo videos for every exercise
+- 🎧 Workout music: plug in any Spotify, YouTube or YouTube Music playlist
+
+   💧 Hydration
+One-tap quick-adds, drink-type tracking (water, green tea, coffee, juice, sports drinks), and daily and monthly trends.
+
+   😴 Sleep
+   Log bedtime and wake time, and duration is calculated for you. Rate sleep quality and track your average over 7 or 30 nights. 
+
+  👟 Activity
+  Step logging with auto-calculated distance, calories burned and active minutes. Progress ring against your daily goal.
+
+  👤 Profile & Goals
+- Goals: **lose weight · maintain · build muscle · endurance**
+- Diets: **non-veg · veg · vegan · keto · paleo**
+- **Automatic TDEE** using the Mifflin-St Jeor equation
+- **Automatic macro split**: 30% protein · 40% carbs · 30% fat
+- Custom daily targets for water, steps and sleep
+
+  🔐 Accounts
+- Email and password sign-up with secure JWT sessions
+- **Sign in with Google**
+- **Forgot password** with a secure one-time email link
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 · React Router v6 · Recharts · date-fns · Axios |
+| **Styling** | Custom CSS design system (no UI framework) · CSS animations · Google Fonts: Bricolage Grotesque, Instrument Serif, Inter Tight, JetBrains Mono |
+| Backend | Node.js · Express 4 · express-validator · Morgan |
+| Database | MongoDB Atlas · Mongoose |
+| Auth & Security| JWT · bcrypt password hashing · Google Identity Services · SHA-256 hashed reset tokens · CORS allowlist · central error handling |
+| Integrations | YouTube Data API v3 · TheMealDB · Nodemailer (SMTP) · Spotify & YouTube embeds |
+| Hosting | Vercel (frontend) · Render (API) |
+
+  Highlights
+- Responsive layout.** Full sidebar on desktop, compact icon rail on tablets, bottom tab bar on phones.
+- Validated API.** Every request is validated, and errors come back in one consistent format.
+- Privacy-minded.** Passwords are hashed, reset tokens are stored only as hashes, and the reset flow never reveals whether an email is registered.
+- Resilient integrations.** Third-party responses are cached, and every optional integration can be switched off without breaking the app.
+- Accessible motion.** All animations turn off when the system's reduced-motion setting is on.
+
+---
+
+## 🚀 Getting Started
+
+  Prerequisites
 - Node.js 18+
-- MongoDB (local or Atlas)
-- npm
+- MongoDB (local or [Atlas](https://www.mongodb.com/atlas))
 
-### Setup
+  Run locally
 
 ```bash
-# 1. Clone / extract project
+git clone https://github.com/dhruvJolly-3/fitpulse.git
 cd fitpulse
 
-# 2. Install all dependencies
+npm install
 npm run install:all
 
-# 3. Configure server environment
-cd server
-cp .env.example .env
-# Edit .env and set MONGO_URI if using Atlas
+cp server/.env.example server/.env   # add MONGODB_URI and JWT_SECRET
 
-# 4. Run both server + client
-cd ..
-npm install        # installs concurrently
 npm run dev
 ```
 
-- **Server**: http://localhost:5001
-- **Client**: http://localhost:3000
+| Service | URL |
+|---|---|
+| App | http://localhost:3000 |
+| API | http://localhost:5001 |
+| Health check | http://localhost:5001/api/health |
+
+  Environment variables
+
+  Server
+
+| Variable | Required | Purpose |
+|---|:---:|---|
+| `MONGODB_URI` | ✅ | MongoDB connection string |
+| `JWT_SECRET` | ✅ | Signs login tokens |
+| `CORS_ORIGINS` | | Allowed frontend URLs |
+| `APP_URL` | | Frontend URL for reset emails |
+| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `MAIL_FROM` | | Password-reset email |
+| `GOOGLE_CLIENT_ID` | | Google sign-in |
+| `YOUTUBE_API_KEY` | | In-app exercise videos |
+| `MEALDB_API_KEY` | | Recipes (free test key by default) |
+
+  Client
+
+| Variable | Purpose |
+|---|---|
+| `REACT_APP_API_URL` | Backend URL |
+| `REACT_APP_GOOGLE_CLIENT_ID` | Google sign-in |
+
+> Optional integrations stay off until their keys are set, so the app runs fully without them.
 
 ---
 
-## 📱 iPhone 17 Setup (PWA)
-
-1. Open Safari on your iPhone 17
-2. Navigate to `http://YOUR_MAC_IP:3000`
-3. Tap the **Share** button → **Add to Home Screen**
-4. FitPulse installs as a native-feeling app with full-screen support
-
-### Apple Health Integration
-To sync steps and sleep from your iPhone:
-1. **Settings → Privacy & Security → Motion & Fitness → Enable FitPulse**
-2. **Health App → Sources → FitPulse → Allow All**
-3. For sleep: Health App → Sources → FitPulse → Sleep → Enable
-
----
-
-## 🏗️ Architecture
+ 🗂 Project Structure
 
 ```
 fitpulse/
-├── server/                  # Express + MongoDB API
-│   ├── models/
-│   │   ├── User.js          # Profile, TDEE, goals
-│   │   ├── NutritionLog.js  # Meals + macros
-│   │   ├── Training.js      # Programs + workout logs
-│   │   └── Metrics.js       # Sleep, Water, Steps
-│   ├── routes/
-│   │   ├── auth.js          # JWT login/register
-│   │   ├── user.js          # Profile + TDEE calc
-│   │   ├── nutrition.js     # Food logging
-│   │   ├── training.js      # Programs + workouts
-│   │   ├── water.js         # Hydration logs
-│   │   ├── sleep.js         # Sleep logs
-│   │   ├── steps.js         # Step logs
-│   │   └── goals.js         # Daily targets
-│   └── index.js
+├── server/
+│   ├── models/        User · NutritionLog · Training · Metrics
+│   ├── routes/        auth · user · nutrition · training · water · sleep
+│   │                  steps · goals · recipes · videos
+│   ├── middleware/    JWT auth · validation · error handling
+│   └── utils/         mailer · cache · async handler
 │
-└── client/                  # React PWA
-    └── src/
-        ├── context/
-        │   └── AuthContext.js   # Auth + API instance
-        ├── components/
-        │   └── AppShell.js      # Sidebar + mobile nav
-        └── pages/
-            ├── AuthPage.js      # Login / Register
-            ├── OnboardingPage.js # First-time setup
-            ├── Dashboard.js     # Overview
-            ├── NutritionPage.js # Calorie tracker
-            ├── TrainingPage.js  # Workout programs
-            ├── WaterPage.js     # Hydration
-            ├── SleepPage.js     # Sleep tracker
-            ├── StepsPage.js     # Activity tracker
-            └── ProfilePage.js   # Settings
+└── client/src/
+    ├── pages/         Dashboard · Nutrition · Recipes · Training · Water
+    │                  Sleep · Steps · Profile · Onboarding · Auth
+    ├── components/    Ring · WeekBars · MonthCalendar · MusicPlayer
+    │                  ExerciseVideoModal · GoogleButton · RangeToggle
+    ├── context/       Auth + API client
+    └── index.css      Design system + motion
 ```
 
 ---
 
-## 🎨 Design System
+ 🔌 API Reference
 
-- **Palette**: Deep obsidian (`#080809`) + Electric Lime accent (`#b5f23d`)
-- **Typography**: Syne (display) + DM Sans (body) + DM Mono (numbers)
-- **Responsive**: Full sidebar on MacBook, bottom tab nav on iPhone
-- **PWA**: `viewport-fit=cover` + safe area insets for Dynamic Island
+All endpoints except auth and health require `Authorization: Bearer <token>`.
 
----
-
-## 🔌 API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Register user |
-| POST | `/api/auth/login` | Login + get JWT |
-| GET/PUT | `/api/user/profile` | Get/update profile |
-| GET | `/api/nutrition/:date` | Get daily food log |
-| POST | `/api/nutrition/:date/food` | Add food entry |
-| DELETE | `/api/nutrition/:date/food/:id` | Remove food |
-| GET | `/api/training/programs` | List programs |
-| POST | `/api/training/programs` | Create program |
-| GET/POST | `/api/training/logs` | Workout logs |
-| GET | `/api/training/streak` | Streak count |
-| GET/POST | `/api/water/:date` | Water log |
-| GET/POST | `/api/sleep/:date` | Sleep log |
-| GET/POST | `/api/steps/:date` | Steps log |
-| GET/PUT | `/api/goals` | View/update daily targets |
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/auth/register` · `/login` · `/google` | Sign up / sign in |
+| `POST` | `/api/auth/forgot-password` · `/reset-password` | Password reset |
+| `GET` `PUT` | `/api/user/profile` | Profile + auto TDEE and macros |
+| `GET` `POST` `DELETE` | `/api/nutrition/:date` · `/:date/food` | Food log |
+| `GET` | `/api/nutrition/summary/week?startDate=&days=` | Calorie history |
+| `GET` `POST` `PUT` | `/api/training/programs` | Training programs |
+| `GET` `POST` | `/api/training/logs` · `/streak` | Workouts + streak |
+| `GET` `POST` | `/api/water` · `/api/sleep` · `/api/steps` | Daily metrics |
+| `GET` | `/api/{water,sleep,steps}/history/week?startDate=&days=` | 7–30 day history |
+| `GET` | `/api/recipes/search` · `/api/recipes/:id` | Recipes |
+| `GET` | `/api/videos/search?q=` | Exercise videos |
+| `GET` | `/api/health` | Service status |
 
 ---
 
-## 🔮 Extend With
+ 🗺 Roadmap
 
-- **Nutritionix API** — 700K+ food database with barcode scanning
-- **HealthKit Bridge** — Native iOS app for real-time Apple Health sync
-- **OpenAI API** — Natural language meal logging ("I had dal chawal")
-- **Push Notifications** — Reminders via Web Push API
-- **Weight Log** — Daily weigh-in tracker with trend chart
-- **Progress Photos** — Before/after photo timeline
+- [ ] Large food database with barcode scanning
+- [ ] Daily weight log with trend chart
+- [ ] Wearable sync (Fitbit, Apple Health, Health Connect)
+- [ ] Smart reminders via push notifications
+- [ ] Progress photos
 
 ---
 
-*Built with ❤️ · MERN Stack · Designed for MacBook + iPhone 17*
+<div align="center">
+
+**Built by [Dhruv Jolly](https://github.com/dhruvJolly-3)**
+
+</div>
