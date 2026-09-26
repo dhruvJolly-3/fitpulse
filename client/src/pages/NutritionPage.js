@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format, subDays, addDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
@@ -37,6 +38,9 @@ const FOOD_DB = [
 export default function NutritionPage() {
   const { user } = useAuth();
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  // If the app stays open past midnight, move the log to the new day
+  const today = useToday();
+  useEffect(() => { setDate(today); }, [today]);
   const [log, setLog] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [mealType, setMealType] = useState('breakfast');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
@@ -6,7 +7,6 @@ import WeekBars from '../components/WeekBars';
 import RangeToggle from '../components/RangeToggle';
 import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
-const today = format(new Date(), 'yyyy-MM-dd');
 const QUICK_AMOUNTS = [150, 250, 350, 500];
 const DRINK_TYPES = [
   { v: 'water', label: 'Water', icon: '💧' },
@@ -17,6 +17,7 @@ const DRINK_TYPES = [
 ];
 
 export default function WaterPage() {
+  const today = useToday(); // updates at midnight / when the app is reopened
   const { user } = useAuth();
   const [log, setLog] = useState(null);
   const [amount, setAmount] = useState(250);
@@ -39,7 +40,7 @@ export default function WaterPage() {
   useEffect(() => {
     fetchLog();
     fetchWeek();
-  }, []);
+  }, [today]);
 
   const addWater = async (a, t) => {
     setAdding(true);

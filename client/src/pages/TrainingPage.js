@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format, subDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
@@ -6,7 +7,6 @@ import ExerciseVideoModal from '../components/ExerciseVideoModal';
 import MusicPanel from '../components/MusicPanel';
 import MonthCalendar from '../components/MonthCalendar';
 
-const today = format(new Date(), 'yyyy-MM-dd');
 
 // ─── FIX 1: Days-per-week & rest days are now asked from user ───
 // generateProgram() now takes daysPerWeek + restDays from user input
@@ -84,6 +84,7 @@ function buildCustomSchedule(goal, daysPerWeek, restDayIndices) {
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function TrainingPage() {
+  const today = useToday(); // updates at midnight / when the app is reopened
   const { user } = useAuth();
   const [todayLog, setTodayLog] = useState(null);
   const [program, setProgram] = useState(null);
@@ -105,7 +106,7 @@ export default function TrainingPage() {
     api.get('/training/logs?limit=10').then(r => setRecentLogs(r.data)).catch(() => {});
     api.get('/training/logs', { params: { startDate: format(subDays(new Date(), 29), 'yyyy-MM-dd'), endDate: today, limit: 31 } })
       .then(r => setMonthLogs(r.data)).catch(() => {});
-  }, []);
+  }, [today]);
 
   // A day counts as "active" on the calendar only if a real workout was logged
   const monthActive = new Set(monthLogs.filter(l => !l.isRestDay && !l.isOffDay).map(l => l.date));

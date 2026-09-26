@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { api, useAuth } from '../context/AuthContext';
@@ -6,9 +7,9 @@ import WeekBars from '../components/WeekBars';
 import RangeToggle from '../components/RangeToggle';
 import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
-const today = format(new Date(), 'yyyy-MM-dd');
 
 export default function SleepPage() {
+  const today = useToday(); // updates at midnight / when the app is reopened
   const { user } = useAuth();
   const [log, setLog] = useState(null);
   const [form, setForm] = useState({ bedtime: '22:30', wakeTime: '06:30', quality: 4, notes: '' });
@@ -21,12 +22,12 @@ export default function SleepPage() {
 
   useEffect(() => {
     api.get(`/sleep/${today}`).then(r => { setLog(r.data); if (r.data) setEditMode(false); }).catch(() => {});
-  }, []);
+  }, [today]);
 
   // History chart: refetch whenever the 7D/30D toggle changes
   useEffect(() => {
     api.get(`/sleep/history/week?startDate=${rangeStart(range)}&days=${range}`).then(r => setWeekLogs(r.data)).catch(() => {});
-  }, [range]);
+  }, [range, today]);
 
   const calcDuration = (bed, wake) => {
     const [bh, bm] = bed.split(':').map(Number);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
@@ -7,9 +8,9 @@ import WeekBars from '../components/WeekBars';
 import RangeToggle from '../components/RangeToggle';
 import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
-const today = format(new Date(), 'yyyy-MM-dd');
 
 export default function StepsPage() {
+  const today = useToday(); // updates at midnight / when the app is reopened
   const { user } = useAuth();
   const [log, setLog] = useState(null);
   // ─── FIX: form stores raw strings, never a prefilled number ───
@@ -27,14 +28,14 @@ export default function StepsPage() {
     api.get(`/steps/${today}`)
       .then(r => { setLog(r.data); if (r.data?.steps > 0) setEditMode(false); })
       .catch(() => {});
-  }, []);
+  }, [today]);
 
   // History chart: refetch whenever the 7D/30D toggle changes
   useEffect(() => {
     api.get(`/steps/history/week?startDate=${rangeStart(range)}&days=${range}`)
       .then(r => setWeekData(dailySeries(r.data, range, 'steps', l => l.steps)))
       .catch(() => {});
-  }, [range]);
+  }, [range, today]);
 
   const autoCalc = (steps) => {
     const s = parseInt(steps) || 0;

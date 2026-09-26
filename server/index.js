@@ -19,6 +19,10 @@ if (missing.length) {
 
 const app = express();
 
+// Render (and most hosts) sit behind one proxy; trust it so req.ip is the
+// real client IP. Rate limiting depends on this.
+app.set('trust proxy', 1);
+
 // ---- CORS allowlist ----
 // Local dev origins are always allowed; deployed frontends come from
 // CORS_ORIGINS, e.g. "https://fitpulse.vercel.app,https://fitpulse.com".
