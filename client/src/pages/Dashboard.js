@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
@@ -63,9 +64,12 @@ export default function Dashboard() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="wave" />
+          <div>
           <h1 className="page-title">{greeting}, <span className="serif-it">{user?.name?.split(' ')[0]}</span></h1>
           <div className="page-date">{format(new Date(), 'EEEE · MMMM d')}</div>
+        </div>
         </div>
         {streak > 0 && <span className="pill coral">🔥 {streak} day streak</span>}
       </header>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Pulse from '../components/Pulse';
 import { api, useAuth } from '../context/AuthContext';
 
 // Recipe ideas from TheMealDB (proxied through our server at /api/recipes).
@@ -48,9 +49,12 @@ export default function RecipesPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="eat" />
+          <div>
           <h1 className="page-title">Recipes <span className="serif-it">& ideas</span></h1>
           <div className="page-date">cook something that fits your goal</div>
+        </div>
         </div>
         <form className="page-actions" onSubmit={submitSearch}>
           <div className="field" style={{ margin: 0 }}>
@@ -84,7 +88,7 @@ export default function RecipesPage() {
             {Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton" style={{ height: 220 }} />)}
           </div>
         ) : recipes.length === 0 ? (
-          !error && <div className="card empty"><div className="ic">🍳</div><h3>No <span className="serif-it">recipes</span> found</h3><p>Try another search or cuisine.</p></div>
+          !error && <div className="card empty"><div className="ic"><Pulse mood="eat" size={92} /></div><h3>No <span className="serif-it">recipes</span> found</h3><p>Try another search or cuisine.</p></div>
         ) : (
           <div className="recipe-grid">
             {recipes.map(r => (

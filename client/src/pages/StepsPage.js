@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import Ring from '../components/Ring';
@@ -92,9 +93,12 @@ export default function StepsPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="run" />
+          <div>
           <h1 className="page-title">Activity</h1>
           <div className="page-date">steps, distance &amp; calories burned</div>
+        </div>
         </div>
         {log?.steps > 0 && !editMode && (
           <button className="btn ghost sm" onClick={startEdit}>Edit today's steps</button>

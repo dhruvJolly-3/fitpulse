@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { format, subDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import ExerciseVideoModal from '../components/ExerciseVideoModal';
@@ -193,9 +194,12 @@ export default function TrainingPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="lift" />
+          <div>
           <h1 className="page-title">Training</h1>
           <div className="page-date">your tailored workout program</div>
+        </div>
         </div>
         <button className="btn primary" onClick={() => setShowGenerate(true)}>⚡ Generate program</button>
       </header>
@@ -332,7 +336,7 @@ export default function TrainingPage() {
           </>
         ) : (
           <div className="card empty">
-            <div className="ic">🏋️</div>
+            <div className="ic"><Pulse mood="lift" size={92} /></div>
             <h3>No active <span className="serif-it">program</span></h3>
             <p>Generate a program based on your goal ({user?.profile?.goal?.replace(/_/g, ' ')}) and diet ({user?.profile?.dietType}).</p>
             <button className="btn primary" onClick={() => setShowGenerate(true)}>⚡ Generate my program</button>

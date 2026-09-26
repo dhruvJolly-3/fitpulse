@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { api, useAuth } from '../context/AuthContext';
 import WeekBars from '../components/WeekBars';
@@ -67,9 +68,12 @@ export default function SleepPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="sleep" />
+          <div>
           <h1 className="page-title">Sleep</h1>
           <div className="page-date">track your recovery and sleep quality</div>
+        </div>
         </div>
       </header>
 

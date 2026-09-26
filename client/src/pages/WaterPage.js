@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import WeekBars from '../components/WeekBars';
@@ -61,9 +62,12 @@ export default function WaterPage() {
   return (
     <div className="fade-up">
       <header className="page-header">
-        <div>
+        <div className="page-heading">
+          <Pulse mood="drink" />
+          <div>
           <h1 className="page-title">Hydration</h1>
           <div className="page-date">stay hydrated, stay sharp</div>
+        </div>
         </div>
       </header>
 
