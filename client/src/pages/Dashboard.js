@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import Ring from '../components/Ring';
 
-const today = format(new Date(), 'yyyy-MM-dd');
 
 export default function Dashboard() {
+  const today = useToday(); // updates at midnight / when the app is reopened
   const { user } = useAuth();
   const navigate = useNavigate();
   const [nutrition, setNutrition] = useState(null);
@@ -31,7 +32,7 @@ export default function Dashboard() {
       setSleep(sl?.data);
       setStreak(st?.data?.streak || 0);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [today]);
 
   const calTarget = user?.dailyCalorieTarget || 2000;
   const calConsumed = nutrition?.totals?.calories || 0;

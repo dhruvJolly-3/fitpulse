@@ -7,6 +7,22 @@ const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { validate } = require('../middleware/validate');
 const { sendMail } = require('../utils/mailer');
+const { rateLimit, emailOf } = require('../middleware/rateLimit');
+
+// ---- Rate limits (brute-force and spam protection) ----
+const MIN = 60 * 1000;
+// Password guessing: 10 attempts per account per IP every 15 min, and 50 per IP overall
+const loginPerAccount = rateLimit({ windowMs: 15 * MIN, max: 10, key: req => `login:${req.ip}:${emailOf(req)}` });
+const loginPerIp = rateLimit({ windowMs: 15 * MIN, max: 50, key: req => `login-ip:${req.ip}` });
+// Account creation: 20 per IP per hour
+const registerLimit = rateLimit({ windowMs: 60 * MIN, max: 20, key: req => `register:${req.ip}` });
+// Reset emails: 5 per email per 15 min, 20 per IP per hour
+const forgotPerEmail = rateLimit({ windowMs: 15 * MIN, max: 5, key: req => `forgot:${emailOf(req)}`,
+  message: 'Too many reset requests for this email. Please wait a few minutes.' });
+const forgotPerIp = rateLimit({ windowMs: 60 * MIN, max: 20, key: req => `forgot-ip:${req.ip}` });
+// Guessing reset tokens / Google credential spam
+const resetLimit = rateLimit({ windowMs: 15 * MIN, max: 20, key: req => `reset:${req.ip}` });
+const googleLimit = rateLimit({ windowMs: 15 * MIN, max: 30, key: req => `google:${req.ip}` });
 
 const sign = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
@@ -21,7 +37,7 @@ const hashToken = (token) => crypto.createHash('sha256').update(token).digest('h
 const RESET_TTL_MS = 60 * 60 * 1000; // reset links are valid for 1 hour
 
 // Register
-router.post('/register', validate([
+router.post('/register', registerLimit, validate([
   body('name').trim().notEmpty().withMessage('Name is required')
     .isLength({ max: 60 }).withMessage('Name must be 60 characters or fewer'),
   body('email').trim().isEmail().withMessage('Enter a valid email'),
@@ -34,7 +50,7 @@ router.post('/register', validate([
 }));
 
 // Login
-router.post('/login', validate([
+router.post('/login', loginPerIp, loginPerAccount, validate([
   body('email').trim().isEmail().withMessage('Enter a valid email'),
   body('password').notEmpty().withMessage('Password is required'),
 ]), asyncHandler(async (req, res) => {
@@ -42,6 +58,7 @@ router.post('/login', validate([
   const user = await User.findOne({ email });
   if (!user || !(await user.comparePassword(password)))
     return res.status(401).json({ message: 'Invalid credentials' });
+  loginPerAccount.reset(req); // successful login clears this account's failed attempts
   res.json(authPayload(user));
 }));
 
@@ -50,7 +67,7 @@ router.post('/login', validate([
 // and posts it here. We verify it with Google, then find or create the user.
 // Needs GOOGLE_CLIENT_ID (same OAuth client ID as the client's
 // REACT_APP_GOOGLE_CLIENT_ID).
-router.post('/google', validate([
+router.post('/google', googleLimit, validate([
   body('credential').isString().notEmpty().withMessage('Missing Google credential'),
 ]), asyncHandler(async (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -87,7 +104,7 @@ router.post('/google', validate([
 // ---- Forgot password ----
 // Always answers the same way whether or not the email exists, so this
 // endpoint can't be used to discover which emails have accounts.
-router.post('/forgot-password', validate([
+router.post('/forgot-password', forgotPerIp, forgotPerEmail, validate([
   body('email').trim().isEmail().withMessage('Enter a valid email'),
 ]), asyncHandler(async (req, res) => {
   const genericReply = { message: 'If an account exists for that email, a reset link has been sent.' };
@@ -113,7 +130,7 @@ router.post('/forgot-password', validate([
 
 // ---- Reset password ----
 // Consumes the one-time token from the emailed link and sets a new password.
-router.post('/reset-password', validate([
+router.post('/reset-password', resetLimit, validate([
   body('token').isString().isLength({ min: 64, max: 64 }).withMessage('Invalid or expired reset link'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ]), asyncHandler(async (req, res) => {
