@@ -8,6 +8,7 @@ const NAV = [
   { path: '/training', label: 'Training', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg> },
   { path: '/water', label: 'Hydration', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z"/></svg> },
   { path: '/sleep', label: 'Sleep', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> },
+  { path: '/recipes', label: 'Recipes', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/></svg> },
   { path: '/steps', label: 'Activity', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 4v6l3 3-3 3v4M11 4v6l-3 3 3 3v4"/></svg> },
 ];
 
@@ -69,7 +70,10 @@ export default function AppShell() {
 
       {/* Main */}
       <main className="main-content">
-        <Outlet />
+        {/* Re-keyed on every route so the .route-view entrance animation replays */}
+        <div key={pathname} className="route-view">
+          <Outlet />
+        </div>
       </main>
 
       {/* Mobile tab bar */}

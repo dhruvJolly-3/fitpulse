@@ -4,7 +4,16 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  // Not required for Google-only accounts (they sign in with an ID token instead).
+  password: {
+    type: String,
+    required: function () { return !this.googleId; },
+  },
+  googleId: { type: String, index: true, sparse: true },
+  // Forgot-password flow: only a SHA-256 hash of the emailed token is stored,
+  // so a DB leak can't be used to reset passwords. Hidden from normal queries.
+  resetPasswordTokenHash: { type: String, select: false },
+  resetPasswordExpires: { type: Date, select: false },
   avatar: String,
   profile: {
     age: Number,
@@ -37,12 +46,13 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 userSchema.methods.comparePassword = async function(plain) {
+  if (!this.password) return false; // Google-only account has no password yet
   return bcrypt.compare(plain, this.password);
 };
 

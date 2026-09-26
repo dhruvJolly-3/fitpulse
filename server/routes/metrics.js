@@ -3,15 +3,15 @@ const { body } = require('express-validator');
 const auth = require('../middleware/auth');
 const { SleepLog, WaterLog, StepsLog } = require('../models/Metrics');
 const asyncHandler = require('../utils/asyncHandler');
-const { validate, dateParam, dateBody, startDateQuery, mongoIdParam } = require('../middleware/validate');
+const { validate, dateParam, dateBody, startDateQuery, daysQuery, mongoIdParam } = require('../middleware/validate');
 
 const DRINK_TYPES = ['water', 'green_tea', 'coffee', 'juice', 'sports_drink', 'other'];
 
 // ---- WATER ----
 const waterRouter = express.Router();
 
-waterRouter.get('/history/week', auth, validate([startDateQuery()]), asyncHandler(async (req, res) => {
-  const logs = await WaterLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(7);
+waterRouter.get('/history/week', auth, validate([startDateQuery(), daysQuery()]), asyncHandler(async (req, res) => {
+  const logs = await WaterLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(req.query.days || 7); // ?days=30 for the month view
   res.json(logs);
 }));
 
@@ -48,8 +48,8 @@ waterRouter.delete('/:date/entry/:entryId', auth, validate([dateParam(), mongoId
 // ---- SLEEP ----
 const sleepRouter = express.Router();
 
-sleepRouter.get('/history/week', auth, validate([startDateQuery()]), asyncHandler(async (req, res) => {
-  const logs = await SleepLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(7);
+sleepRouter.get('/history/week', auth, validate([startDateQuery(), daysQuery()]), asyncHandler(async (req, res) => {
+  const logs = await SleepLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(req.query.days || 7); // ?days=30 for the month view
   res.json(logs);
 }));
 
@@ -80,8 +80,8 @@ sleepRouter.post('/', auth, validate([
 // ---- STEPS ----
 const stepsRouter = express.Router();
 
-stepsRouter.get('/history/week', auth, validate([startDateQuery()]), asyncHandler(async (req, res) => {
-  const logs = await StepsLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(7);
+stepsRouter.get('/history/week', auth, validate([startDateQuery(), daysQuery()]), asyncHandler(async (req, res) => {
+  const logs = await StepsLog.find({ user: req.user._id, date: { $gte: req.query.startDate } }).sort({ date: 1 }).limit(req.query.days || 7); // ?days=30 for the month view
   res.json(logs);
 }));
 

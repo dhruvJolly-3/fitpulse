@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format, subDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
+import ExerciseVideoModal from '../components/ExerciseVideoModal';
+import MusicPlayer from '../components/MusicPlayer';
+import MonthCalendar from '../components/MonthCalendar';
 
 const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -86,6 +89,8 @@ export default function TrainingPage() {
   const [streak, setStreak] = useState({ streak: 0, totalWorkouts: 0 });
   const [showGenerate, setShowGenerate] = useState(false);
   const [recentLogs, setRecentLogs] = useState([]);
+  const [monthLogs, setMonthLogs] = useState([]);   // last 30 days, for the calendar
+  const [demoFor, setDemoFor] = useState(null);     // exercise name whose video modal is open
 
   // ─── FIX 2: Generate modal state ───
   const [genDaysPerWeek, setGenDaysPerWeek] = useState(4);
@@ -97,7 +102,17 @@ export default function TrainingPage() {
     api.get('/training/programs').then(r => { if (r.data.length > 0) setProgram(r.data[0]); }).catch(() => {});
     api.get('/training/streak').then(r => setStreak(r.data)).catch(() => {});
     api.get('/training/logs?limit=10').then(r => setRecentLogs(r.data)).catch(() => {});
+    api.get('/training/logs', { params: { startDate: format(subDays(new Date(), 29), 'yyyy-MM-dd'), endDate: today, limit: 31 } })
+      .then(r => setMonthLogs(r.data)).catch(() => {});
   }, []);
+
+  // A day counts as "active" on the calendar only if a real workout was logged
+  const monthActive = new Set(monthLogs.filter(l => !l.isRestDay && !l.isOffDay).map(l => l.date));
+  const monthTitle = (date) => {
+    const l = monthLogs.find(x => x.date === date);
+    if (!l) return `${date} · nothing logged`;
+    return `${date} · ${l.isOffDay ? 'off day' : l.isRestDay ? 'rest' : l.dayLabel || 'workout'}`;
+  };
 
   const toggleRestDay = (idx) => {
     setGenRestDays(prev => {
@@ -267,6 +282,9 @@ export default function TrainingPage() {
                         </div>
                       </div>
                       <span className="pill out end">{ex.category}</span>
+                      {/* stopPropagation so opening the demo doesn't also tick the exercise */}
+                      <button className="btn ghost sm demo" title="Watch demo"
+                        onClick={e => { e.stopPropagation(); setDemoFor(ex.name); }}>▶ Demo</button>
                     </div>
                   );
                 })}
@@ -320,6 +338,20 @@ export default function TrainingPage() {
             <button className="btn primary" onClick={() => setShowGenerate(true)}>⚡ Generate my program</button>
           </div>
         )}
+
+        {/* Month consistency calendar + music */}
+        <div className="grid g-12">
+          <div className="card span-7">
+            <div className="card-h">
+              <h3>Last 30 <span className="serif-it">days</span></h3>
+              <span className="label">{monthActive.size} workouts</span>
+            </div>
+            <MonthCalendar activeDates={monthActive} titleFor={monthTitle} />
+          </div>
+          <div className="span-5">
+            <MusicPlayer />
+          </div>
+        </div>
 
         {/* Recent Logs */}
         {recentLogs.length > 0 && (
@@ -405,6 +437,7 @@ export default function TrainingPage() {
           </div>
         </div>
       )}
+      {demoFor && <ExerciseVideoModal exercise={demoFor} onClose={() => setDemoFor(null)} />}
     </div>
   );
 }

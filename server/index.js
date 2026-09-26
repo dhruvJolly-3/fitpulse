@@ -52,6 +52,8 @@ app.use('/api/water', require('./routes/water'));
 app.use('/api/sleep', require('./routes/sleep'));
 app.use('/api/steps', require('./routes/steps'));
 app.use('/api/goals', require('./routes/goals'));
+app.use('/api/recipes', require('./routes/recipes')); // TheMealDB proxy
+app.use('/api/videos', require('./routes/videos'));   // YouTube exercise demos
 
 // Used by Render's health check. 503 tells Render the instance isn't ready.
 app.get('/api/health', (req, res) => {

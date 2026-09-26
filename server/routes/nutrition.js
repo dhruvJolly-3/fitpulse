@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const auth = require('../middleware/auth');
 const NutritionLog = require('../models/NutritionLog');
 const asyncHandler = require('../utils/asyncHandler');
-const { validate, dateParam, startDateQuery, mongoIdParam } = require('../middleware/validate');
+const { validate, dateParam, startDateQuery, daysQuery, mongoIdParam } = require('../middleware/validate');
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
 
@@ -21,11 +21,11 @@ const nonNegative = (field) =>
   body(field).optional().isFloat({ min: 0, max: 10000 }).withMessage(`${field} must be a positive number`).toFloat();
 
 // Get weekly summary
-router.get('/summary/week', auth, validate([startDateQuery()]), asyncHandler(async (req, res) => {
+router.get('/summary/week', auth, validate([startDateQuery(), daysQuery()]), asyncHandler(async (req, res) => {
   const logs = await NutritionLog.find({
     user: req.user._id,
     date: { $gte: req.query.startDate }
-  }).sort({ date: 1 }).limit(7);
+  }).sort({ date: 1 }).limit(req.query.days || 7); // ?days=30 for the month view
   res.json(logs);
 }));
 

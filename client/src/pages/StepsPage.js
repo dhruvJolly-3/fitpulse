@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import Ring from '../components/Ring';
 import WeekBars from '../components/WeekBars';
+import RangeToggle from '../components/RangeToggle';
+import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
 const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -13,6 +15,7 @@ export default function StepsPage() {
   const [form, setForm] = useState({ steps: '', distance: '', caloriesBurnt: '', activeMinutes: '' });
   const [saving, setSaving] = useState(false);
   const [weekData, setWeekData] = useState([]);
+  const [range, setRange] = useState(7); // 7 or 30 days of history
   const [editMode, setEditMode] = useState(false);
   // ─── FIX: track which fields were manually edited by user ───
   const [manualFields, setManualFields] = useState({ distance: false, caloriesBurnt: false });
@@ -23,18 +26,14 @@ export default function StepsPage() {
     api.get(`/steps/${today}`)
       .then(r => { setLog(r.data); if (r.data?.steps > 0) setEditMode(false); })
       .catch(() => {});
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    api.get(`/steps/history/week?startDate=${start}`)
-      .then(r => {
-        const data = Array.from({ length: 7 }, (_, i) => {
-          const d = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
-          const found = r.data.find(l => l.date === d);
-          return { day: format(subDays(new Date(), 6 - i), 'EEE'), date: d, steps: found?.steps || 0 };
-        });
-        setWeekData(data);
-      })
-      .catch(() => {});
   }, []);
+
+  // History chart: refetch whenever the 7D/30D toggle changes
+  useEffect(() => {
+    api.get(`/steps/history/week?startDate=${rangeStart(range)}&days=${range}`)
+      .then(r => setWeekData(dailySeries(r.data, range, 'steps', l => l.steps)))
+      .catch(() => {});
+  }, [range]);
 
   const autoCalc = (steps) => {
     const s = parseInt(steps) || 0;
@@ -215,9 +214,15 @@ export default function StepsPage() {
           </div>
         )}
 
-        {/* Weekly chart */}
+        {/* History chart (7 or 30 days) */}
         <div className="card">
-          <div className="card-h"><h3>7-day steps</h3><span className="label">goal {target.toLocaleString()}</span></div>
+          <div className="card-h">
+            <div>
+              <h3>{range}-day steps</h3>
+              <span className="label">goal {target.toLocaleString()} · avg {Math.round(loggedAverage(weekData, 'steps')).toLocaleString()}</span>
+            </div>
+            <RangeToggle value={range} onChange={setRange} />
+          </div>
           <WeekBars data={weekData} xKey="day" yKey="steps" label="Steps" target={target}
             isToday={d => d.date === today} format={v => v.toLocaleString()} />
         </div>

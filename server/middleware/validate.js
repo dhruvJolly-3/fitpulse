@@ -21,6 +21,8 @@ const DATE_MSG = 'must be a date in YYYY-MM-DD format';
 const dateParam = () => param('date').matches(DATE_FORMAT).withMessage(`date ${DATE_MSG}`);
 const dateBody = () => body('date').matches(DATE_FORMAT).withMessage(`date ${DATE_MSG}`);
 const startDateQuery = () => query('startDate').matches(DATE_FORMAT).withMessage(`startDate ${DATE_MSG}`);
+// History endpoints: how many days to return. 7 = week view, up to 31 = month view.
+const daysQuery = () => query('days').optional().isInt({ min: 1, max: 31 }).withMessage('days must be 1–31').toInt();
 const mongoIdParam = (name) => param(name).isMongoId().withMessage(`${name} is not a valid id`);
 
-module.exports = { validate, dateParam, dateBody, startDateQuery, mongoIdParam, DATE_FORMAT };
+module.exports = { validate, dateParam, dateBody, startDateQuery, daysQuery, mongoIdParam, DATE_FORMAT };

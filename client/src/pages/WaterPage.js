@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import WeekBars from '../components/WeekBars';
+import RangeToggle from '../components/RangeToggle';
+import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 
 const today = format(new Date(), 'yyyy-MM-dd');
 const QUICK_AMOUNTS = [150, 250, 350, 500];
@@ -20,23 +22,16 @@ export default function WaterPage() {
   const [type, setType] = useState('water');
   const [adding, setAdding] = useState(false);
   const [weekData, setWeekData] = useState([]);
+  const [range, setRange] = useState(7); // 7 or 30 days of history
 
   const target = user?.waterTarget || 2500;
 
   const fetchLog = () => api.get(`/water/${today}`).then(r => setLog(r.data)).catch(() => {});
 
-  // Last 7 days from the server; days with no log show as 0
-  const fetchWeek = () => {
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
-    api.get(`/water/history/week?startDate=${start}`)
-      .then(r => {
-        const days = Array.from({ length: 7 }, (_, i) => {
-          const d = subDays(new Date(), 6 - i);
-          const found = r.data.find(l => l.date === format(d, 'yyyy-MM-dd'));
-          return { day: format(d, 'EEE'), date: format(d, 'yyyy-MM-dd'), amount: found?.total || 0 };
-        });
-        setWeekData(days);
-      })
+  // Last 7 or 30 days from the server; days with no log show as 0
+  const fetchWeek = (days = range) => {
+    api.get(`/water/history/week?startDate=${rangeStart(days)}&days=${days}`)
+      .then(r => setWeekData(dailySeries(r.data, days, 'amount', l => l.total)))
       .catch(() => {});
   };
 
@@ -124,7 +119,13 @@ export default function WaterPage() {
         <div className="grid g-12">
           {/* Weekly chart */}
           <div className="card span-7">
-            <div className="card-h"><h3>7-day hydration</h3><span className="label">target {target}ml</span></div>
+            <div className="card-h">
+              <div>
+                <h3>{range}-day hydration</h3>
+                <span className="label">target {target}ml · avg {Math.round(loggedAverage(weekData, 'amount'))}ml</span>
+              </div>
+              <RangeToggle value={range} onChange={d => { setRange(d); fetchWeek(d); }} />
+            </div>
             <WeekBars data={weekData} xKey="day" yKey="amount" label="Water" target={target}
               isToday={d => d.date === today} format={v => `${v}ml`} />
           </div>

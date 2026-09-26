@@ -30,6 +30,9 @@ cd client && CI=true npm run build
 cp server/.env.example server/.env
 # Required: MONGODB_URI (MONGO_URI also accepted), JWT_SECRET
 # Optional: PORT (default 5001), CORS_ORIGINS, NODE_ENV
+# Optional features (off until set): APP_URL + SMTP_* (password-reset email),
+# GOOGLE_CLIENT_ID (Google sign-in), YOUTUBE_API_KEY (exercise demo videos),
+# MEALDB_API_KEY (recipes; defaults to TheMealDB test key "1")
 ```
 The client needs no env for local dev — it falls back to `http://localhost:5001`. See `client/.env.example`.
 
@@ -60,7 +63,11 @@ Express 4 API. MongoDB via Mongoose. JWT auth middleware (`middleware/auth.js`) 
 - `User` — profile, TDEE/BMR/macro targets, per-user daily targets (water/steps/sleep). TDEE via Mifflin-St Jeor in `User.calculateTDEE()`. Macros auto-set (30% protein / 40% carbs / 30% fat). `PUT /user/profile` only accepts whitelisted fields.
 - `NutritionLog` — daily food entries keyed by date + user.
 - `Training` — workout programs and workout logs with streak tracking. Programs are generated client-side by fixed rules from goal + diet (not AI); exercise categories include `push`/`pull`/`legs`/`core` for muscle-gain splits.
-- `Metrics` — `SleepLog`, `WaterLog`, `StepsLog` (routers in `routes/metrics.js`, re-exported by `water.js`/`sleep.js`/`steps.js`). Each has `GET /history/week?startDate=`.
+- `Metrics` — `SleepLog`, `WaterLog`, `StepsLog` (routers in `routes/metrics.js`, re-exported by `water.js`/`sleep.js`/`steps.js`). Each has `GET /history/week?startDate=&days=` (`days` 1–31, default 7; the client uses 7 or 30). Nutrition's `GET /summary/week` takes the same params.
+
+**Auth extras (`routes/auth.js`):** `POST /auth/google` (verifies a Google Identity Services ID token; links to an existing account by email), `POST /auth/forgot-password` (emails a 1-hour link via `utils/mailer.js`; only a SHA-256 hash of the token is stored; same reply whether or not the email exists), `POST /auth/reset-password`. Google-only users have no `password`.
+
+**Third-party proxies:** `routes/recipes.js` (TheMealDB — no nutrition data) and `routes/videos.js` (YouTube Data API; 503 without a key, client falls back to a YouTube search link). Both cache responses in memory via `utils/cache.js`.
 
 ### Client (`client/`)
 Create React App (not Vite). React Router v6. No Redux — global state is `AuthContext` only.
@@ -71,6 +78,9 @@ Create React App (not Vite). React Router v6. No Redux — global state is `Auth
 - JWT stored in `localStorage` as `fp_token`. Interceptor attaches `Authorization: Bearer`.
 - `AppShell` wraps all authenticated routes.
 - Routing: unauthenticated → `/auth`, authenticated but no `profile.age` → `/onboarding`, otherwise dashboard + nested routes.
+- History charts share `utils/series.js` (`rangeStart`, `dailySeries`, `loggedAverage`) and `components/RangeToggle.js` (7D/30D).
+- Music (`components/MusicPlayer.js`) is embed-only: a pasted Spotify / YouTube / YouTube Music link becomes an official iframe; the link is kept in `localStorage` (`fp_music_url`). No API keys.
+- Motion lives in the "Motion" section of `index.css`; `AppShell` re-keys `.route-view` per route to replay the entrance. Keep `prefers-reduced-motion` support when adding animations.
 - Never display invented numbers or placeholder data — every figure on screen comes from the API or the user's own targets.
 
 ### Design system
