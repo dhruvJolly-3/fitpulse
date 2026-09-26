@@ -45,6 +45,13 @@ export function MusicProvider({ children }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(80);
   const [error, setError] = useState('');
+  const [muted, setMuted] = useState(false);
+  const [rate, setRateState] = useState(1);          // playback speed
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState('off');       // off | all | one
+  // Mirrors for the player's event callbacks, which are created only once
+  const mode = useRef({ shuffle, repeat });
+  mode.current = { shuffle, repeat };
 
   // Refs mirror state for the player's event callbacks (created once)
   const state = useRef({ queue, index });
@@ -60,9 +67,17 @@ export function MusicProvider({ children }) {
     announceSource('youtube');
   }, []);
 
-  const next = useCallback(() => {
+  // Next track, honouring shuffle and repeat-all. `auto` = the song ended by itself.
+  const next = useCallback((auto = false) => {
     const { queue: q, index: i } = state.current;
-    if (i + 1 < q.length) loadAt(i + 1);
+    const { shuffle: sh, repeat: rp } = mode.current;
+    if (auto && rp === 'one') { player.current?.seekTo(0, true); player.current?.playVideo(); return; }
+    if (sh && q.length > 1) {
+      let j = i;
+      while (j === i) j = Math.floor(Math.random() * q.length);
+      loadAt(j);
+    } else if (i + 1 < q.length) loadAt(i + 1);
+    else if (rp === 'all' && q.length) loadAt(0);
     else { player.current?.stopVideo(); setPlaying(false); }
   }, [loadAt]);
 
@@ -83,10 +98,10 @@ export function MusicProvider({ children }) {
           onStateChange: (e) => {
             if (e.data === PLAYING) { setPlaying(true); setDuration(e.target.getDuration() || 0); }
             else if (e.data === PAUSED) setPlaying(false);
-            else if (e.data === ENDED) next();
+            else if (e.data === ENDED) next(true);
           },
           // 2/5/100/101/150 = bad id, HTML5 error, removed, or embedding blocked → skip it
-          onError: () => { setError('That track can’t be played here, skipping…'); setTimeout(next, 800); },
+          onError: () => { setError('That track can’t be played here, skipping…'); setTimeout(() => next(true), 800); },
         },
       });
     }).catch(err => !cancelled && setError(err.message));
@@ -132,6 +147,21 @@ export function MusicProvider({ children }) {
 
   const seek = useCallback((sec) => { player.current?.seekTo(sec, true); setProgress(sec); }, []);
   const setVolume = useCallback((v) => { player.current?.setVolume(v); setVolumeState(v); }, []);
+  const toggleMute = useCallback(() => {
+    const p = player.current;
+    if (!p) return;
+    if (p.isMuted?.() || muted) { p.unMute(); setMuted(false); } else { p.mute(); setMuted(true); }
+  }, [muted]);
+  // YouTube supports 0.25–2x; we offer the useful range
+  const setRate = useCallback((r) => { player.current?.setPlaybackRate?.(r); setRateState(r); }, []);
+  const toggleShuffle = useCallback(() => setShuffle(v => !v), []);
+  const cycleRepeat = useCallback(() => setRepeat(v => (v === 'off' ? 'all' : v === 'all' ? 'one' : 'off')), []);
+  const jumpTo = useCallback((i) => loadAt(i), [loadAt]);
+  const removeAt = useCallback((i) => {
+    setQueue(q => q.filter((_, k) => k !== i));
+    setIndex(cur => (i < cur ? cur - 1 : cur));
+  }, []);
+
   const clear = useCallback(() => {
     player.current?.stopVideo(); setQueue([]); setIndex(-1); setPlaying(false); setProgress(0);
   }, []);
@@ -149,16 +179,36 @@ export function MusicProvider({ children }) {
       artwork: current.thumbnail ? [{ src: current.thumbnail, sizes: '320x180' }] : [],
     });
     const ms = navigator.mediaSession;
-    ms.setActionHandler('play', () => player.current?.playVideo());
-    ms.setActionHandler('pause', () => player.current?.pauseVideo());
-    ms.setActionHandler('nexttrack', next);
-    ms.setActionHandler('previoustrack', prev);
+    // try/catch: older browsers throw on actions they don't know
+    const on = (action, fn) => { try { ms.setActionHandler(action, fn); } catch { /* unsupported */ } };
+    on('play', () => { player.current?.playVideo(); announceSource('youtube'); });
+    on('pause', () => player.current?.pauseVideo());
+    on('nexttrack', () => next(false));
+    on('previoustrack', prev);
+    on('seekto', (d) => d.seekTime != null && player.current?.seekTo(d.seekTime, true));
+    on('seekbackward', (d) => player.current?.seekTo(Math.max(0, (player.current.getCurrentTime?.() || 0) - (d.seekOffset || 10)), true));
+    on('seekforward', (d) => player.current?.seekTo((player.current.getCurrentTime?.() || 0) + (d.seekOffset || 10), true));
+    on('stop', () => player.current?.stopVideo());
   }, [current, next, prev]);
+
+  // Keep the OS media widget (lock screen, notification, Chrome's media hub,
+  // keyboard media keys) in sync with play state and position
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !current) return;
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+    if (duration > 0 && navigator.mediaSession.setPositionState) {
+      try {
+        navigator.mediaSession.setPositionState({ duration, playbackRate: rate, position: Math.min(progress, duration) });
+      } catch { /* invalid state while a new track loads */ }
+    }
+  }, [current, playing, progress, duration, rate]);
 
   return (
     <MusicContext.Provider value={{
-      ready, queue, index, current, playing, progress, duration, volume, error,
-      playList, enqueue, toggle, next, prev, seek, setVolume, clear,
+      source: 'youtube', ready, queue, index, current, playing, progress, duration, volume, error,
+      muted, rate, shuffle, repeat,
+      playList, enqueue, toggle, next: () => next(false), prev, seek, setVolume, clear,
+      toggleMute, setRate, toggleShuffle, cycleRepeat, jumpTo, removeAt,
     }}>
       {children}
       {/* Hidden audio source; kept on-screen at 1px because some mobile browsers pause off-screen iframes */}

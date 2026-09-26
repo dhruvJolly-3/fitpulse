@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MusicProvider } from '../music/YouTubeMusicContext';
 import { SpotifyProvider } from '../music/SpotifyContext';
 import MiniPlayer from './MiniPlayer';
 import InstallPrompt from './InstallPrompt';
+import { ThemeToggle } from '../context/ThemeContext';
 
 const NAV = [
   { path: '/', label: 'Dashboard', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> },
@@ -21,7 +22,7 @@ const MOBILE_NAV = [
   { path: '/nutrition', label: 'Nutrition', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a10 10 0 0 0-7.07 17.07C6.83 21 9.33 22 12 22s5.17-1 7.07-2.93A10 10 0 0 0 12 2z"/><path d="M8 12h8M12 8v8"/></svg> },
   { path: '/training', label: 'Train', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 4v16M18 4v16M2 8h4M18 8h4M2 16h4M18 16h4"/></svg> },
   { path: '/water', label: 'Water', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z"/></svg> },
-  { path: '/profile', label: 'Profile', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
+  { path: 'more', label: 'More', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg> },
 ];
 
 export default function AppShell() {
@@ -30,6 +31,13 @@ export default function AppShell() {
   const { pathname } = useLocation();
 
   const isActive = (path) => path === '/' ? pathname === '/' : pathname.startsWith(path);
+
+  // Phone "More" sheet: the pages that don't fit in the 5-tab bar
+  const [moreOpen, setMoreOpen] = useState(false);
+  const MORE = [...NAV.filter(n => !MOBILE_NAV.some(m => m.path === n.path)),
+    { path: '/profile', label: 'Profile', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> }];
+  const moreActive = MORE.some(n => isActive(n.path));
+  useEffect(() => setMoreOpen(false), [pathname]); // close after navigating
 
   // Music providers wrap the whole shell so playback survives page changes
   return (
@@ -61,6 +69,7 @@ export default function AppShell() {
         </nav>
 
         <div className="rail-foot">
+          <ThemeToggle className="rail-theme" showLabel />
           <div className="rail-profile">
             <div className="avatar">{user?.name?.[0]?.toUpperCase()}</div>
             <div className="meta">
@@ -77,6 +86,14 @@ export default function AppShell() {
 
       {/* Main */}
       <main className="main-content">
+        {/* Phone-only top bar: brand + theme switch */}
+        <div className="mobile-top">
+          <div className="brand">
+            <div className="brand-mark">F</div>
+            <span className="brand-name">FitPulse<b>.</b></span>
+          </div>
+          <ThemeToggle />
+        </div>
         {/* Re-keyed on every route so the .route-view entrance animation replays */}
         <InstallPrompt />
         <div key={pathname} className="route-view">
@@ -87,12 +104,32 @@ export default function AppShell() {
       {/* Mobile tab bar */}
       <nav className="mobile-nav">
         {MOBILE_NAV.map(n => (
-          <button key={n.path} className={`mobile-nav-item ${isActive(n.path) ? 'active' : ''}`} onClick={() => navigate(n.path)}>
+          <button key={n.path}
+            className={`mobile-nav-item ${(n.path === 'more' ? moreActive || moreOpen : isActive(n.path)) ? 'active' : ''}`}
+            onClick={() => (n.path === 'more' ? setMoreOpen(v => !v) : navigate(n.path))}>
             {n.icon}
             <span>{n.label}</span>
           </button>
         ))}
       </nav>
+      {moreOpen && (
+        <div className="sheet-overlay" onClick={() => setMoreOpen(false)}>
+          <div className="sheet" onClick={e => e.stopPropagation()}>
+            <div className="sheet-grab" />
+            <div className="sheet-grid">
+              {MORE.map(n => (
+                <button key={n.path} className={`sheet-item ${isActive(n.path) ? 'active' : ''}`} onClick={() => navigate(n.path)}>
+                  {n.icon}<span>{n.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="sheet-foot">
+              <ThemeToggle showLabel />
+              <button className="btn danger sm" onClick={logout}>Sign out</button>
+            </div>
+          </div>
+        </div>
+      )}
       <MiniPlayer />
     </div>
     </SpotifyProvider>
