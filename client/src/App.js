@@ -14,6 +14,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import RecipesPage from './pages/RecipesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import SpotifyCallbackPage from './pages/SpotifyCallbackPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -38,6 +39,8 @@ const AppRoutes = () => {
       {/* Password reset: public; reset stays reachable even if a session exists */}
       <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      {/* Spotify OAuth redirect target; must match a Redirect URI in the Spotify dashboard */}
+      <Route path="/spotify-callback" element={user ? <SpotifyCallbackPage /> : <Navigate to="/auth" />} />
       <Route path="/onboarding" element={user && !user.profile?.age ? <OnboardingPage /> : <Navigate to="/" />} />
       <Route path="/" element={<PrivateRoute><AppShell /></PrivateRoute>}>
         <Route index element={<Dashboard />} />

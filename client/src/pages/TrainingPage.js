@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format, subDays } from 'date-fns';
 import { useAuth, api } from '../context/AuthContext';
 import ExerciseVideoModal from '../components/ExerciseVideoModal';
-import MusicPlayer from '../components/MusicPlayer';
+import MusicPanel from '../components/MusicPanel';
 import MonthCalendar from '../components/MonthCalendar';
 
 const today = format(new Date(), 'yyyy-MM-dd');
@@ -349,7 +349,7 @@ export default function TrainingPage() {
             <MonthCalendar activeDates={monthActive} titleFor={monthTitle} />
           </div>
           <div className="span-5">
-            <MusicPlayer />
+            <MusicPanel />
           </div>
         </div>
 

@@ -33,7 +33,7 @@ export default function ExerciseVideoModal({ exercise, onClose }) {
         {active && (
           <div className="video-frame">
             {/* youtube-nocookie = privacy-enhanced embed (no tracking cookies until play) */}
-            <iframe src={`https://www.youtube-nocookie.com/embed/${active}?rel=0`} title={exercise}
+            <iframe src={`https://www.youtube-nocookie.com/embed/${active}?rel=0&playsinline=1&modestbranding=1`} title={exercise}
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
           </div>
         )}

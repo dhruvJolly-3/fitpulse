@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { faviconLogin, faviconLogout, faviconHeartbeat } from '../favicon';
 
 const AuthContext = createContext(null);
 
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const startSession = (data) => {
     localStorage.setItem('fp_token', data.token);
     setUser(data.user);
+    faviconLogin();
     return data;
   };
 
@@ -59,7 +61,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('fp_token');
     setUser(null);
+    faviconLogout();
   };
+
+  // Favicon heartbeat only while signed in
+  const signedIn = Boolean(user);
+  useEffect(() => (signedIn ? faviconHeartbeat() : undefined), [signedIn]);
 
   const updateUser = (updated) => setUser(prev => ({ ...prev, ...updated }));
 

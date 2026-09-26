@@ -1,0 +1,16 @@
+{
+  "name": "FitPulse",
+  "short_name": "FitPulse",
+  "description": "Nutrition, training, hydration, sleep and steps in one place.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1ebde",
+  "theme_color": "#0e0e10",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
