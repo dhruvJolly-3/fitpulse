@@ -45,21 +45,7 @@ router.put('/profile', auth, validate(profileRules), asyncHandler(async (req, re
     PROFILE_FIELDS.forEach(f => { if (req.body.profile[f] !== undefined) user.profile[f] = req.body.profile[f]; });
   }
 
-  const tdee = user.calculateTDEE();
-  if (tdee) {
-    user.tdee = tdee;
-    // Adjust calorie target based on goal
-    const goal = user.profile.goal;
-    user.dailyCalorieTarget = goal === 'lose_weight' ? tdee - 500
-      : goal === 'gain_muscle' ? tdee + 300 : tdee;
-    // Default macros (protein-forward)
-    const cals = user.dailyCalorieTarget;
-    user.macroTargets = {
-      protein: Math.round((cals * 0.30) / 4),
-      carbs: Math.round((cals * 0.40) / 4),
-      fat: Math.round((cals * 0.30) / 9)
-    };
-  }
+  user.applyTargets();
   await user.save();
 
   const updated = user.toObject();

@@ -48,8 +48,12 @@ app.use(cors({
     callback(err);
   },
 }));
-app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Photos carry resized images (up to ~1 MB), so they get a bigger body limit
+// than the rest of the API.
+app.use('/api/photos', express.json({ limit: '2mb' }), require('./routes/photos'));
+app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -62,6 +66,10 @@ app.use('/api/steps', require('./routes/steps'));
 app.use('/api/goals', require('./routes/goals'));
 app.use('/api/recipes', require('./routes/recipes')); // TheMealDB proxy
 app.use('/api/videos', require('./routes/videos'));   // YouTube exercise demos
+app.use('/api/weight', require('./routes/weight'));
+app.use('/api/foods', require('./routes/foods'));     // Open Food Facts search + barcodes
+app.use('/api/reminders', require('./routes/reminders'));
+app.use('/api/integrations/fitbit', require('./routes/fitbit'));
 
 // Used by Render's health check. 503 tells Render the instance isn't ready.
 app.get('/api/health', (req, res) => {
@@ -82,6 +90,7 @@ mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('MongoDB connected');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    require('./utils/reminders').startScheduler(); // web-push reminders (only when VAPID keys are set)
   })
   .catch(err => {
     console.error('FATAL: MongoDB connection failed:', err.message);

@@ -27,6 +27,9 @@ const errorHandler = (err, req, res, next) => {
     // Unique index violation (e.g. email already registered)
     status = 409;
     message = `${Object.keys(err.keyValue || {}).join(', ') || 'Record'} already exists`;
+  } else if (err.type === 'entity.too.large') {
+    status = 413;
+    message = 'That upload is too large';
   } else if (err.type === 'entity.parse.failed') {
     // express.json() couldn't parse the body
     message = 'Malformed JSON body';
