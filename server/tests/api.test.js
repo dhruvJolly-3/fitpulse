@@ -84,6 +84,12 @@ describe('health & plumbing', () => {
     const bad = await call('GET', '/health', { headers: { Origin: 'https://evil.example' } });
     assert.equal(bad.status, 403);
   });
+  test('CORS: the Android and iOS app origins are allowed', async () => {
+    for (const origin of ['https://localhost', 'capacitor://localhost']) {
+      const r = await call('GET', '/health', { headers: { Origin: origin } });
+      assert.equal(r.status, 200, origin);
+    }
+  });
   test('protected routes need a token', async () => {
     assert.equal((await call('GET', '/user/profile')).status, 401);
     assert.equal((await call('GET', '/user/profile', { token: 'garbage' })).status, 401);

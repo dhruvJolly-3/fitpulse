@@ -7,6 +7,7 @@ import {
   isYouTubeAccountConfigured, isYouTubeConnected, connectYouTube, disconnectYouTube,
   myPlaylists, playlistTracks,
 } from '../music/youtubeAccount';
+import { isNativeApp } from '../platform';
 
 // Workout music, three ways, all controlled from the MiniPlayer bar:
 //   Search    → any song on YouTube (needs YOUTUBE_API_KEY on the server)
@@ -133,7 +134,9 @@ function YouTubeTab() {
   useEffect(() => { if (connected && !playlists) run(async () => setPlaylists(await myPlaylists())); }, [connected, playlists]);
 
   if (!isYouTubeAccountConfigured()) {
-    return <div className="notice">YouTube login isn’t set up yet (needs <code>REACT_APP_GOOGLE_CLIENT_ID</code>). Use the Search tab meanwhile.</div>;
+    return isNativeApp
+      ? <div className="notice">Your YouTube playlists are available on the FitPulse website. In the app, use the Search tab.</div>
+      : <div className="notice">YouTube login isn’t set up yet (needs <code>REACT_APP_GOOGLE_CLIENT_ID</code>). Use the Search tab meanwhile.</div>;
   }
   if (!connected) {
     return (
@@ -213,7 +216,9 @@ function SpotifyTab() {
   }, [sp.connected, view, playlists, liked]);
 
   if (!sp.configured) {
-    return <div className="notice">Spotify isn’t set up yet (needs <code>REACT_APP_SPOTIFY_CLIENT_ID</code>).</div>;
+    return isNativeApp
+      ? <div className="notice">Spotify playback is available on the FitPulse website. In the app, use the Search tab.</div>
+      : <div className="notice">Spotify isn’t set up yet (needs <code>REACT_APP_SPOTIFY_CLIENT_ID</code>).</div>;
   }
   if (!sp.connected) {
     return (

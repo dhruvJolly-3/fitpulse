@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 // - iPhone / iPad Safari: iOS has no install API, so we show the
 //   Share → "Add to Home Screen" steps instead.
 // Hidden when already running as an installed app or after "Not now".
+import { isNativeApp } from '../platform';
+
 const DISMISS_KEY = 'fp_install_dismissed';
 
 const isStandalone = () =>
@@ -18,7 +20,7 @@ const wasDismissed = () => { try { return localStorage.getItem(DISMISS_KEY) === 
 
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState(null); // Android install event
-  const [hidden, setHidden] = useState(() => isStandalone() || wasDismissed() || !isMobile());
+  const [hidden, setHidden] = useState(() => isNativeApp || isStandalone() || wasDismissed() || !isMobile());
 
   useEffect(() => {
     const onPrompt = (e) => { e.preventDefault(); setDeferred(e); };

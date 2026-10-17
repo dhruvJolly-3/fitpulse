@@ -27,8 +27,12 @@ app.set('trust proxy', 1);
 // Local dev origins are always allowed; deployed frontends come from
 // CORS_ORIGINS, e.g. "https://fitpulse.vercel.app,https://fitpulse.com".
 const DEV_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+// The Android / iOS apps (Capacitor) load the site from these fixed origins.
+// Safe to allow: auth is a Bearer token, not cookies.
+const NATIVE_APP_ORIGINS = ['https://localhost', 'capacitor://localhost'];
 const allowedOrigins = [
   ...DEV_ORIGINS,
+  ...NATIVE_APP_ORIGINS,
   ...(process.env.CORS_ORIGINS || '')
     .split(',')
     .map(origin => origin.trim().replace(/\/$/, '')) // tolerate spaces and trailing slashes

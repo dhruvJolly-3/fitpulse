@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { isNativeApp } from '../platform';
 
 // "Continue with Google" via Google Identity Services.
 // Only renders when REACT_APP_GOOGLE_CLIENT_ID is set at build time (it must
@@ -35,7 +36,7 @@ export default function GoogleButton({ onCredential, onError, text = 'continue_w
   handlers.current = { onCredential, onError };
 
   useEffect(() => {
-    if (!CLIENT_ID) return;
+    if (!CLIENT_ID || isNativeApp) return;
     let cancelled = false;
     loadScript().then(() => {
       if (cancelled || !slot.current) return;
@@ -52,7 +53,9 @@ export default function GoogleButton({ onCredential, onError, text = 'continue_w
     return () => { cancelled = true; };
   }, [text, resolved]);
 
-  if (!CLIENT_ID || failed) return null;
+  // Google doesn't allow its sign-in inside app WebViews, so the Android / iOS
+  // app uses email + password only.
+  if (!CLIENT_ID || failed || isNativeApp) return null;
   return (
     <>
       <div className="divider">or</div>

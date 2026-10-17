@@ -7,8 +7,11 @@
 //   https://<your-site>/spotify-callback
 //   http://127.0.0.1:3000/spotify-callback   (Spotify doesn't accept "localhost")
 // Then set REACT_APP_SPOTIFY_CLIENT_ID on Vercel / in client/.env.local.
+import { isNativeApp } from '../platform';
+
 export const CLIENT_ID = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
-export const isSpotifyConfigured = () => Boolean(CLIENT_ID);
+// Spotify's login redirect comes back to the website, so it's web-only for now.
+export const isSpotifyConfigured = () => Boolean(CLIENT_ID) && !isNativeApp;
 
 const SCOPES = [
   'streaming',                      // Web Playback SDK (play inside the app)

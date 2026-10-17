@@ -6,11 +6,14 @@
 // in-app YouTube player.
 // Google Cloud Console: enable "YouTube Data API v3" and add the
 // youtube.readonly scope to the OAuth consent screen.
+import { isNativeApp } from '../platform';
+
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 const SCOPE = 'https://www.googleapis.com/auth/youtube.readonly';
 let token = null; // { value, expires } — memory only, re-requested after reload
 
-export const isYouTubeAccountConfigured = () => Boolean(CLIENT_ID);
+// Google's popup sign-in doesn't work inside the mobile app, so playlists are web-only there.
+export const isYouTubeAccountConfigured = () => Boolean(CLIENT_ID) && !isNativeApp;
 export const isYouTubeConnected = () => Boolean(token && Date.now() < token.expires);
 export const disconnectYouTube = () => {
   if (token && window.google?.accounts?.oauth2) window.google.accounts.oauth2.revoke(token.value, () => {});

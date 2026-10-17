@@ -1,0 +1,25 @@
+{
+  "appId": "com.dhruvjolly.fitpulse",
+  "appName": "FitPulse",
+  "webDir": "build",
+  "backgroundColor": "#0e0e10",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchShowDuration": 3000,
+      "backgroundColor": "#0e0e10",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
+}
