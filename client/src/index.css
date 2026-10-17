@@ -1107,3 +1107,78 @@ input[type="number"] { -moz-appearance: textfield; }
   .install-banner { margin: 10px 16px 0; }
   .mp-queue { right: 0; left: 0; width: auto; }
 }
+
+/* ===========================================================
+   Responsive refinements: every screen from 320px phones to 4K
+   =========================================================== */
+
+/* Readable small labels everywhere (9px was too small on phones) */
+.nav-label, .macro .k { font-size: 10px; }
+
+/* Big screens: keep content at a comfortable reading width, centred.
+   Padding (not max-width) so the header's bottom border stays full width. */
+@media (min-width: 1600px) {
+  .page-header, .page-body { padding-left: max(var(--pad-x), calc((100% - 1440px) / 2)); padding-right: max(var(--pad-x), calc((100% - 1440px) / 2)); }
+}
+
+/* Calendars: square cells, but never giant tiles on wide cards */
+.month-cal .cell { max-height: 48px; }
+
+/* Tablet (icon rail): the theme toggle shows just the switch, and
+   three-up stat rows stay three-up instead of leaving an orphan */
+@media (max-width: 920px) and (min-width: 601px) {
+  .rail-theme { margin: 0 0 10px; justify-content: center; }
+  .rail-theme .lbl { display: none; }
+  .g-3 { grid-template-columns: repeat(3, 1fr); }
+  .g-3 .stat-tile .v { font-size: 34px; }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .mobile-nav-item { font-size: 10px; letter-spacing: 0.04em; }
+
+  /* An odd last tile in a two-column grid takes the full row */
+  .g-3 > :last-child:nth-child(odd), .g-4 > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+  /* Exercise rows: name gets the space, Demo stays inside the card */
+  .exo { gap: 12px; padding: 12px 14px; }
+  .exo > div:nth-child(2) { flex: 1; min-width: 0; }
+  .exo .nm { overflow-wrap: anywhere; }
+  .exo .pill.end { display: none; }
+  .exo .demo { flex-shrink: 0; padding: 0 12px; }
+
+  /* Tables: keep dates and badges on one line, scroll sideways if needed */
+  .tbl td.mono, .tbl td:last-child, .tbl th { white-space: nowrap; }
+  .tbl td, .tbl th { padding-left: 8px; padding-right: 8px; }
+
+  /* Text links get a finger-sized hit area */
+  .link-btn { display: inline-block; padding: 10px 0; }
+}
+
+/* Small phones (iPhone SE, older Androids) */
+@media (max-width: 380px) {
+  :root { --pad-x: 12px; }
+  .card { padding: 16px; }
+  .stat-tile .v { font-size: 28px; }
+  .stat-tile .v .u { display: block; margin: 4px 0 0; font-size: 12px; }
+  .page-title { font-size: 22px; }
+  .mobile-nav-item { font-size: 10px; letter-spacing: 0; padding: 8px 2px; }
+}
+
+/* Phones turned sideways: short screens, so trim vertical chrome */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-top { position: static; }
+  .mobile-nav { padding-top: 4px; padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+  .mobile-nav-item { flex-direction: row; gap: 6px; padding: 6px 4px; }
+  .splash .pulse { width: 72px; height: 72px; }
+  .modal { max-height: 96vh; }
+  /* Sign-in: hero and form side by side so the form is visible without scrolling */
+  .auth { grid-template-columns: 1fr 1fr; }
+  .auth-hero { padding: 20px 24px; gap: 12px; }
+  .auth-hero h1 { font-size: 40px; }
+  .auth-hero p { font-size: 13px; }
+  .ah-ticker, .af-pulse { display: none; }
+  .ah-bg img { right: -10%; opacity: 0.45; }
+  .auth-form { padding: 20px 24px; }
+  .auth-form h2 { font-size: 26px; margin: 8px 0 14px; }
+}
