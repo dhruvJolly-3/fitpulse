@@ -149,6 +149,7 @@ export default function Dashboard() {
               { label: '+ Workout', icon: '🏋️', path: '/training' },
               { label: '+ Sleep', icon: '😴', path: '/sleep' },
               { label: '+ Steps', icon: '👟', path: '/steps' },
+              { label: '+ Weight', icon: '⚖️', path: '/progress' },
             ].map(a => (
               <button key={a.label} className="btn ghost sm" onClick={() => navigate(a.path)}>
                 <span>{a.icon}</span>{a.label}

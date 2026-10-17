@@ -7,11 +7,15 @@ import Ring from '../components/Ring';
 import WeekBars from '../components/WeekBars';
 import RangeToggle from '../components/RangeToggle';
 import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
+import FoodSearch from '../components/FoodSearch';
+import MealPhotos from '../components/MealPhotos';
+import PhotoViewer from '../components/PhotoViewer';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
 const MEAL_ICONS = { breakfast: '☀️', lunch: '🌤️', dinner: '🌙', snack: '🍎', pre_workout: '⚡', post_workout: '💪' };
 
-// Food database (sample - real app would use a full API like Nutritionix)
+// Quick picks: common foods with home-style portions. The full database
+// (Open Food Facts) is searched from the Log food sheet.
 const FOOD_DB = [
   { name: 'Oats (100g)', calories: 389, protein: 17, carbs: 66, fat: 7 },
   { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
@@ -44,18 +48,27 @@ export default function NutritionPage() {
   const [log, setLog] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [mealType, setMealType] = useState('breakfast');
-  const [search, setSearch] = useState('');
   const [custom, setCustom] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', quantity: 100 });
   const [addMode, setAddMode] = useState('search'); // 'search' | 'custom'
   const [weekData, setWeekData] = useState([]);
   const [range, setRange] = useState(7); // 7 or 30 days of history
+  const [photos, setPhotos] = useState([]);   // meal photos for this date
+  const [viewing, setViewing] = useState(null);
 
   const fetchLog = async (d) => {
     const { data } = await api.get(`/nutrition/${d}`);
     setLog(data);
   };
 
-  useEffect(() => { fetchLog(date); }, [date]);
+  const fetchPhotos = (d) => api.get('/photos', { params: { kind: 'meal', date: d } }).then(r => setPhotos(r.data)).catch(() => setPhotos([]));
+
+  useEffect(() => { fetchLog(date); fetchPhotos(date); }, [date]);
+
+  const deletePhoto = async (p) => {
+    await api.delete(`/photos/${p._id}`);
+    setViewing(null);
+    fetchPhotos(date);
+  };
 
   // Calorie history: one bar per day (un-logged days = 0), refetched on 7D/30D toggle
   useEffect(() => {
@@ -68,7 +81,6 @@ export default function NutritionPage() {
     await api.post(`/nutrition/${date}/food`, { ...food, mealType, time: new Date().toISOString() });
     fetchLog(date);
     setShowAdd(false);
-    setSearch('');
   };
 
   const addCustom = async () => {
@@ -82,7 +94,6 @@ export default function NutritionPage() {
     fetchLog(date);
   };
 
-  const filtered = FOOD_DB.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
   const calTarget = user?.dailyCalorieTarget || 2000;
   const totals = log?.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
   const remaining = calTarget - totals.calories;
@@ -169,7 +180,8 @@ export default function NutritionPage() {
             {MEAL_TYPES.map(mt => {
               const foods = (log?.foods || []).filter(f => f.mealType === mt);
               const mealCals = foods.reduce((s, f) => s + (f.calories || 0), 0);
-              if (foods.length === 0) return null;
+              const mealPhotos = photos.filter(p => p.mealType === mt);
+              if (foods.length === 0 && mealPhotos.length === 0) return null;
               return (
                 <div key={mt} className="meal-block">
                   <div className="mh">
@@ -190,9 +202,12 @@ export default function NutritionPage() {
                       </div>
                     </div>
                   ))}
-                  <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={() => { setMealType(mt); setShowAdd(true); }}>
-                    + Add to {mt.replace('_', ' ')}
-                  </button>
+                  <div className="meal-actions">
+                    <button className="btn ghost sm" onClick={() => { setMealType(mt); setShowAdd(true); }}>
+                      + Add to {mt.replace('_', ' ')}
+                    </button>
+                    <MealPhotos date={date} mealType={mt} photos={mealPhotos} onChange={() => fetchPhotos(date)} onOpen={setViewing} />
+                  </div>
                 </div>
               );
             })}
@@ -244,6 +259,13 @@ export default function NutritionPage() {
               ))}
             </div>
 
+            {/* Photo log for the chosen meal */}
+            <div className="meal-photo-row">
+              <span className="label">Meal photo</span>
+              <MealPhotos date={date} mealType={mealType} photos={photos.filter(p => p.mealType === mealType)}
+                onChange={() => fetchPhotos(date)} onOpen={setViewing} />
+            </div>
+
             {/* Mode toggle */}
             <div className="seg" style={{ marginBottom: 16 }}>
               {['search', 'custom'].map(m => (
@@ -254,20 +276,7 @@ export default function NutritionPage() {
             </div>
 
             {addMode === 'search' ? (
-              <>
-                <input placeholder="Search foods…" value={search} onChange={e => setSearch(e.target.value)} style={{ marginBottom: 12 }} autoFocus />
-                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                  {(search ? filtered : FOOD_DB).map((f, i) => (
-                    <button key={i} className="line-item" style={{ width: '100%', textAlign: 'left', padding: '11px 6px' }} onClick={() => addFood(f)}>
-                      <div>
-                        <div className="t" style={{ fontWeight: 500 }}>{f.name}</div>
-                        <div className="s mono">P {f.protein}g · C {f.carbs}g · F {f.fat}g</div>
-                      </div>
-                      <div className="end"><span className="kc" style={{ fontWeight: 700 }}>{f.calories}</span></div>
-                    </button>
-                  ))}
-                </div>
-              </>
+              <FoodSearch quickFoods={FOOD_DB} onAdd={addFood} />
             ) : (
               <div>
                 <div className="field">
@@ -300,6 +309,8 @@ export default function NutritionPage() {
           </div>
         </div>
       )}
+
+      {viewing && <PhotoViewer photo={viewing} onClose={() => setViewing(null)} onDelete={deletePhoto} />}
     </div>
   );
 }

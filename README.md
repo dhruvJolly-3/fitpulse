@@ -108,6 +108,15 @@ Your day at a glance: calorie ring, macro progress, hydration, steps, sleep, TDE
 - Live **protein / carbs / fat / fiber** progress against your targets
 - Calorie trends over **7 or 30 days**
 
+- 🔎 **Food database** of millions of packaged foods (Open Food Facts), with portion sizes in grams or servings
+- 📷 **Barcode scanning** with the camera, plus a typed fallback
+- 🖼️ **Meal photos** to keep a visual food diary next to each meal
+
+### ⚖️ Progress
+- **Daily weight log** with a 7-day trend line, goal line and 30D / 90D / 1Y views
+- Your newest weigh-in automatically updates TDEE, calorie and macro targets
+- **Progress photos** (front, side, back) with a side-by-side before/after compare
+
 ### 🍳 Recipes
 - Browse by cuisine (Indian, Chinese, Italian, Mexican, Thai and more) or search by name
 - Vegetarian and vegan collections surface automatically for veg and vegan diets
@@ -136,6 +145,18 @@ Log bedtime and wake time, and duration is calculated for you. Rate sleep qualit
 
 ### 👟 Activity
 Step logging with auto-calculated distance, calories burned and active minutes, with a progress ring against your daily goal.
+
+### 🔔 Smart reminders
+- Water, meals, workout, morning weigh-in and bedtime, each with your own times
+- **Smart:** a reminder is skipped when its goal is already met (on pace with water, meal already logged, workout done…)
+- Website: Web Push, even when FitPulse is closed. Phone apps: on-device notifications that work offline
+
+### ⌚ Fitbit sync
+- Connect a Fitbit or Pixel Watch account and pull the last 7 days of steps, sleep, workouts and weight
+- Never lowers numbers you typed yourself; each workout is added only once
+
+### 📱 Android and iOS apps
+- The same React code wrapped with Capacitor (`client/android`, `client/ios`); see [client/MOBILE.md](client/MOBILE.md)
 
 ### 👤 Profile and goals
 - Goals: **lose weight · maintain · build muscle · endurance**
@@ -219,6 +240,8 @@ npm run dev
 | `GOOGLE_CLIENT_ID` | | Google sign-in |
 | `YOUTUBE_API_KEY` | | Music search and in-app exercise videos |
 | `MEALDB_API_KEY` | | Recipes (free test key by default) |
+| `VAPID_PUBLIC_KEY` `VAPID_PRIVATE_KEY` `VAPID_SUBJECT` | | Smart reminders on the website (`npx web-push generate-vapid-keys`) |
+| `FITBIT_CLIENT_ID` `FITBIT_CLIENT_SECRET` `FITBIT_REDIRECT_URI` | | Fitbit sync (dev.fitbit.com app, type "Server") |
 
 **Client**
 
@@ -287,6 +310,12 @@ All endpoints except auth and health need `Authorization: Bearer <token>`.
 | `GET` | `/api/{water,sleep,steps}/history/week?startDate=&days=` | 7–30 day history |
 | `GET` | `/api/recipes/search` · `/api/recipes/:id` | Recipes |
 | `GET` | `/api/videos/search?q=` · `/api/videos/music?q=` | Exercise videos and music search |
+| `GET` `POST` `DELETE` | `/api/weight` · `/api/weight/:date` | Weigh-ins (newest updates targets) |
+| `GET` | `/api/foods/search?q=` · `/api/foods/barcode/:code` | Open Food Facts search and barcode lookup |
+| `GET` `POST` `DELETE` | `/api/photos` · `/api/photos/:id` | Progress and meal photos |
+| `GET` `PUT` | `/api/reminders/settings` · `GET /api/reminders/plan` | Smart reminder settings and upcoming plan |
+| `POST` `DELETE` | `/api/reminders/subscribe` · `POST /api/reminders/test` | Web Push subscription |
+| `GET` `POST` `DELETE` | `/api/integrations/fitbit/{status,connect,callback,sync}` | Fitbit account link and sync |
 | `GET` | `/api/health` | Service status |
 
 ---
@@ -307,12 +336,17 @@ All endpoints except auth and health need `Authorization: Bearer <token>`.
 - [x] Auth rate limiting, midnight date rollover and an API test suite
 - [x] Faster first load when the API is cold-starting
 
+- [x] Android and iOS apps from the same codebase (Capacitor)
+- [x] Fitbit (Google) sync: steps, sleep, workouts, weight
+- [x] Food database with barcode scanning and meal photo logging
+- [x] Daily weight log with trend chart
+- [x] Smart reminders (Web Push on the website, on-device on phones)
+- [x] Progress photos with before/after compare
+
 **Next**
-- [ ] Google Health / Fitbit sync (steps, sleep, workouts)
-- [ ] Large food database with barcode scanning and photo logging
-- [ ] Daily weight log with trend chart
-- [ ] Smart reminders via push notifications
-- [ ] Progress photos
+- [ ] Apple Health (iOS) and Health Connect (Android) on-device sync
+- [ ] Photo recognition to estimate a meal's calories
+- [ ] Publish to the Play Store and App Store
 
 ---
 

@@ -11,6 +11,7 @@ import TrainingPage from './pages/TrainingPage';
 import WaterPage from './pages/WaterPage';
 import SleepPage from './pages/SleepPage';
 import StepsPage from './pages/StepsPage';
+import ProgressPage from './pages/ProgressPage';
 import ProfilePage from './pages/ProfilePage';
 import OnboardingPage from './pages/OnboardingPage';
 import RecipesPage from './pages/RecipesPage';
@@ -46,6 +47,7 @@ const AppRoutes = () => {
         <Route path="water" element={<WaterPage />} />
         <Route path="sleep" element={<SleepPage />} />
         <Route path="steps" element={<StepsPage />} />
+        <Route path="progress" element={<ProgressPage />} />
         <Route path="recipes" element={<RecipesPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>

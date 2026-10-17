@@ -43,6 +43,9 @@ for iOS. Running on a real iPhone needs your Apple ID under Xcode → Signing & 
 | YouTube playlists, Spotify | Web only (a note points to the website) | Their OAuth popups/redirects return to the website |
 | Pop-out player, install banner, service worker | Off | Not needed / not available inside an app |
 | Links to other sites | Open in the in-app browser | So the app isn't replaced by the other site |
+| Smart reminders | On-device notifications (work offline) | Re-planned from the server each time the app opens or closes |
+| Barcode scanning, meal and progress photos | ✅ Camera | Camera / photo permissions are declared in `AndroidManifest.xml` and `Info.plist` |
+| Fitbit sync | ✅ Opens Fitbit in the in-app browser | Tokens stay on the server, so it works the same as on the web |
 
 ## Publishing
 

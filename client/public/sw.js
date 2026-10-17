@@ -4,7 +4,7 @@
      so a new deploy is always picked up when online.
    - Hashed build assets (/static/*) and icons: cache first (they never change).
    - API calls and third-party requests are never cached. */
-const CACHE = 'fitpulse-v2';
+const CACHE = 'fitpulse-v3';
 const SHELL = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -45,4 +45,28 @@ self.addEventListener('fetch', (e) => {
       }))
     );
   }
+});
+
+// ---- Smart reminders (Web Push) ----
+// The server sends { title, body, url, tag }; tapping opens that page.
+self.addEventListener('push', (e) => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch { data = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(data.title || 'FitPulse', {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/favicon-32.png',
+    tag: data.tag || 'fitpulse',
+    data: { url: data.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.url || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+    const open = clients.find(c => c.url.startsWith(self.location.origin));
+    if (open) { open.focus(); return open.navigate(url); }
+    return self.clients.openWindow(url);
+  }));
 });

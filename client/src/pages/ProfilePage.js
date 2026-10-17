@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth, api } from '../context/AuthContext';
+import RemindersSettings from '../components/RemindersSettings';
+import FitbitCard from '../components/FitbitCard';
 
 export default function ProfilePage() {
   const { user, updateUser, logout } = useAuth();
@@ -22,7 +24,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('body');
+  // Back from Fitbit's consent screen → open the Apps tab
+  const [activeTab, setActiveTab] = useState(() => (new URLSearchParams(window.location.search).has('fitbit') ? 'apps' : 'body'));
 
   const setField = (section, key, val) => {
     if (section === 'root') setForm(p => ({ ...p, [key]: val }));
@@ -51,7 +54,8 @@ export default function ProfilePage() {
   const bmiLabel = bmi ? (bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese') : null;
   const bmiColor = bmi && bmi >= 25 ? 'var(--coral)' : undefined; // coral flags out-of-range BMI
 
-  const TABS = ['body', 'goals', 'targets'];
+  const TABS = ['body', 'goals', 'targets', 'reminders', 'apps'];
+  const formTab = ['body', 'goals', 'targets'].includes(activeTab);
 
   return (
     <div className="fade-up">
@@ -195,13 +199,21 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+
+              {/* Reminders Tab */}
+              {activeTab === 'reminders' && <RemindersSettings />}
+
+              {/* Connected apps Tab */}
+              {activeTab === 'apps' && <FitbitCard onSynced={() => api.get('/user/profile').then(r => updateUser(r.data)).catch(() => {})} />}
             </div>
 
-            {error && <div className="alert" style={{ marginTop: 16, marginBottom: 0 }}>{error}</div>}
+            {formTab && error && <div className="alert" style={{ marginTop: 16, marginBottom: 0 }}>{error}</div>}
 
-            <button className="btn primary block" style={{ marginTop: 16 }} onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save changes'}
-            </button>
+            {formTab && (
+              <button className="btn primary block" style={{ marginTop: 16 }} onClick={save} disabled={saving}>
+                {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save changes'}
+              </button>
+            )}
           </div>
 
           <div className="span-4 stack">

@@ -5,6 +5,7 @@ import { isNativeApp, openExternal } from './platform';
 //  • Android back button goes back a page, and closes the app on the home screen
 //  • links to other sites open in the in-app browser instead of replacing the app
 //  • the native splash screen is hidden once React has rendered
+//  • smart reminders are re-planned as on-device notifications
 export async function initNativeApp() {
   if (!isNativeApp) return;
   const [{ App }, { StatusBar, Style }, { SplashScreen }] = await Promise.all([
@@ -35,6 +36,13 @@ export async function initNativeApp() {
     e.preventDefault();
     openExternal(url.href);
   });
+
+  // Smart reminders: re-plan on-device notifications whenever the app comes to
+  // the foreground or goes to the background, so ones already done are dropped
+  const { rescheduleNative, listenForNativeTaps } = await import('./utils/notifications');
+  listenForNativeTaps();
+  rescheduleNative().catch(() => {});
+  App.addListener('appStateChange', () => { rescheduleNative().catch(() => {}); }).catch(() => {});
 
   // Let the first paint land before the splash fades
   requestAnimationFrame(() => setTimeout(() => SplashScreen.hide({ fadeOutDuration: 250 }).catch(() => {}), 150));
