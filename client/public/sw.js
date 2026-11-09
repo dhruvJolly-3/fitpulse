@@ -4,7 +4,7 @@
      so a new deploy is always picked up when online.
    - Hashed build assets (/static/*) and icons: cache first (they never change).
    - API calls and third-party requests are never cached. */
-const CACHE = 'fitpulse-v2';
+const CACHE = 'fitpulse-v3';
 const SHELL = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -45,4 +45,30 @@ self.addEventListener('fetch', (e) => {
       }))
     );
   }
+});
+
+/* Smart reminders: the API sends { title, body, url, tag } via Web Push. */
+self.addEventListener('push', (e) => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch { data = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(data.title || 'FitPulse', {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag, // a newer reminder of the same kind replaces the old one
+    data: { url: data.url || '/' },
+  }));
+});
+
+// Tapping a reminder focuses an open FitPulse window (or opens one) on the right page
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const target = new URL(e.notification.data?.url || '/', self.location.origin).href;
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const open = clients.find(c => c.url.startsWith(self.location.origin));
+      if (open) return open.navigate(target).then(c => (c || open).focus());
+      return self.clients.openWindow(target);
+    })
+  );
 });

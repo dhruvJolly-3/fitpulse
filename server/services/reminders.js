@@ -110,7 +110,7 @@ const CHECKS = {
     return {
       title: 'Morning weigh-in ⚖️',
       body: 'Same time, before breakfast, gives the cleanest trend. Takes 10 seconds.',
-      url: '/weight',
+      url: '/progress',
     };
   },
 };
