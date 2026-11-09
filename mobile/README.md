@@ -31,8 +31,10 @@ npx expo start
 ### Testing on an iPhone without a paid Apple account
 
 1. Install **Expo Go** from the App Store.
-2. On your computer, run `npx expo start --tunnel`. `--tunnel` works even when the phone and PC are on different networks.
+2. Connect the phone and the computer to the **same Wi-Fi**, then run `npx expo start`.
 3. Scan the QR code with the iPhone camera.
+
+Different networks (or a Wi-Fi that blocks devices from seeing each other, like office Wi-Fi)? Run `npx expo login` once (free Expo account), then `npx expo start --tunnel`.
 
 Everything works except Apple Health sync and push notifications. Those screens explain that they need the installed app. The health libraries load only when they are used, so Expo Go doesn't crash.
 

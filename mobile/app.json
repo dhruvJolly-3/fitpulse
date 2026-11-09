@@ -63,7 +63,7 @@
           "color": "#c9e265"
         }
       ],
-      "expo-health-connect",
+      "react-native-health-connect",
       [
         "@kingstinct/react-native-healthkit",
         {
