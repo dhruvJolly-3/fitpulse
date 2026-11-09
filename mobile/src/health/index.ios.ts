@@ -3,11 +3,15 @@
 // The library creates its native objects on import, so it is required lazily:
 // importing it at the top would crash the whole app in Expo Go.
 import type * as HealthKitModule from '@kingstinct/react-native-healthkit';
+import { hasNativeModule } from './native';
 import { dayWindows, round, wakeDate, type HealthDay, type HealthPlatform } from './types';
 
 let cached: typeof HealthKitModule | null | undefined;
 const load = (): typeof HealthKitModule | null => {
   if (cached === undefined) {
+    // HealthKit runs on Nitro; without its native module the import itself is fatal
+    const nitroReady = (globalThis as { NitroModulesProxy?: unknown }).NitroModulesProxy != null || hasNativeModule('NitroModules');
+    if (!nitroReady) return (cached = null);
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       cached = require('@kingstinct/react-native-healthkit') as typeof HealthKitModule;

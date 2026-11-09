@@ -2,6 +2,7 @@
 // Needs a development/production build; Expo Go does not include this native module,
 // so the library is required lazily and the rest of the app still runs in Expo Go.
 import type * as HealthConnectModule from 'react-native-health-connect';
+import { hasNativeModule } from './native';
 import { dayWindows, round, wakeDate, type HealthDay, type HealthPlatform } from './types';
 
 type Permission = HealthConnectModule.Permission;
@@ -18,6 +19,8 @@ const PERMISSIONS: Permission[] = [
 let cached: typeof HealthConnectModule | null | undefined;
 const load = (): typeof HealthConnectModule | null => {
   if (cached === undefined) {
+    // The library calls getEnforcing('HealthConnect') on import, which is fatal without it
+    if (!hasNativeModule('HealthConnect')) return (cached = null);
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       cached = require('react-native-health-connect') as typeof HealthConnectModule;
