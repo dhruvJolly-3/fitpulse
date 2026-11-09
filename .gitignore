@@ -12,3 +12,6 @@ client/build
 
 # Local AI-assistant notes (kept out of the repo)
 CLAUDE.md
+
+# stray Python wheels
+*.whl
