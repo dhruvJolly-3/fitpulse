@@ -83,7 +83,7 @@
       "expo-router"
     ],
     "extra": {
-      "apiUrl": "https://fitpulse-api.onrender.com"
+      "apiUrl": "https://fitpulse-psmj.onrender.com"
     }
   }
 }

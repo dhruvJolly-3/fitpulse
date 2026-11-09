@@ -3,7 +3,7 @@
 # on; this request both wakes the API and asks it to send any due reminders.
 #
 # Setup (GitHub → Settings → Secrets and variables → Actions):
-#   FITPULSE_API_URL  e.g. https://fitpulse-api.onrender.com  (no trailing slash)
+#   FITPULSE_API_URL  e.g. https://fitpulse-psmj.onrender.com  (no trailing slash)
 #   CRON_SECRET       same value as CRON_SECRET on Render
 name: Smart reminders
 
