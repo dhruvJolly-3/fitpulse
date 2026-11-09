@@ -13,7 +13,9 @@ const sleepLogSchema = new mongoose.Schema({
   heartRateAvg: Number,
   hrv: Number,
   notes: String,
-  fromAppleHealth: { type: Boolean, default: false }
+  fromAppleHealth: { type: Boolean, default: false },
+  // Where the entry came from; synced entries never overwrite manual ones
+  source: { type: String, enum: ['manual', 'health_connect', 'apple_health'], default: 'manual' }
 }, { timestamps: true });
 
 sleepLogSchema.index({ user: 1, date: 1 }, { unique: true });
@@ -44,7 +46,8 @@ const stepsLogSchema = new mongoose.Schema({
     hour: Number,
     steps: Number
   }],
-  fromAppleHealth: { type: Boolean, default: false }
+  fromAppleHealth: { type: Boolean, default: false },
+  source: { type: String, enum: ['manual', 'health_connect', 'apple_health'], default: 'manual' }
 }, { timestamps: true });
 
 stepsLogSchema.index({ user: 1, date: 1 }, { unique: true });

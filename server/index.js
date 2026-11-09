@@ -26,7 +26,8 @@ app.set('trust proxy', 1);
 // ---- CORS allowlist ----
 // Local dev origins are always allowed; deployed frontends come from
 // CORS_ORIGINS, e.g. "https://fitpulse.vercel.app,https://fitpulse.com".
-const DEV_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+// :8081 is the Expo dev server when the mobile app runs in a browser
+const DEV_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8081'];
 const allowedOrigins = [
   ...DEV_ORIGINS,
   ...(process.env.CORS_ORIGINS || '')
@@ -44,6 +45,9 @@ app.use(cors({
     callback(err);
   },
 }));
+// Progress photo uploads carry base64 images; everything else keeps the
+// default 100 kb body limit. The first parser to run wins, so this goes first.
+app.use('/api/photos', express.json({ limit: '3mb' }));
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
@@ -58,6 +62,11 @@ app.use('/api/steps', require('./routes/steps'));
 app.use('/api/goals', require('./routes/goals'));
 app.use('/api/recipes', require('./routes/recipes')); // TheMealDB proxy
 app.use('/api/videos', require('./routes/videos'));   // YouTube exercise demos
+app.use('/api/weight', require('./routes/weight'));
+app.use('/api/photos', require('./routes/photos'));   // progress photos
+app.use('/api/foods', require('./routes/foods'));     // food search + barcode (Open Food Facts)
+app.use('/api/reminders', require('./routes/reminders'));
+app.use('/api/health-sync', require('./routes/healthSync')); // Health Connect / Apple Health via the mobile app
 
 // Used by Render's health check. 503 tells Render the instance isn't ready.
 app.get('/api/health', (req, res) => {
@@ -72,12 +81,27 @@ app.get('/api/health', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
+// While the API is awake, check reminders every few minutes. Render's free
+// tier sleeps when idle, so the scheduled GitHub Action (.github/workflows/
+// reminders.yml) also calls POST /api/reminders/run, which wakes it up.
+// REMINDER_TICK_MINUTES=0 turns the in-process ticker off.
+const startReminderTicker = () => {
+  const minutes = Number(process.env.REMINDER_TICK_MINUTES ?? 5);
+  if (!minutes || process.env.NODE_ENV === 'test') return;
+  const { runReminders } = require('./services/reminders');
+  const timer = setInterval(() => {
+    runReminders().catch(err => console.error('Reminder tick failed:', err.message));
+  }, minutes * 60 * 1000);
+  timer.unref();
+};
+
 // DB + Start
 const PORT = process.env.PORT || 5001; // Render injects PORT; 5001 for local dev
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('MongoDB connected');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    startReminderTicker();
   })
   .catch(err => {
     console.error('FATAL: MongoDB connection failed:', err.message);

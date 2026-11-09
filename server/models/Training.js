@@ -27,7 +27,18 @@ const workoutLogSchema = new mongoose.Schema({
   perceivedExertion: { type: Number, min: 1, max: 10 },
   mood: { type: String, enum: ['great', 'good', 'okay', 'tired', 'sick'] },
   notes: String,
-  completedAt: Date
+  completedAt: Date,
+  // Workouts imported from Health Connect / Apple Health (e.g. a run tracked on a watch)
+  synced: [{
+    externalId: String,
+    type: { type: String }, // wrapped: a bare `type` key would be read as the schema type
+    start: Date,
+    end: Date,
+    durationMin: Number,
+    calories: Number,
+    distanceKm: Number,
+    source: { type: String, enum: ['health_connect', 'apple_health'] }
+  }]
 }, { timestamps: true });
 
 const trainingProgramSchema = new mongoose.Schema({
