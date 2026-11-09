@@ -29,13 +29,13 @@ export default function Sleep() {
   const [range, setRange] = useState<7 | 30>(7);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { data, reload, refreshing, refresh } = useLoad(async () => {
+  const { data, reload, refreshing, refresh } = useLoad(`sleep:${date}:${range}`, async () => {
     const [log, hist] = await Promise.all([
       api.get<SleepLog | null>(`/sleep/${date}`),
       api.get<SleepLog[]>('/sleep/history/week', { params: { startDate: rangeStart(range), days: range } }),
     ]);
     return { log, series: dailySeries(hist, range, l => l.duration) };
-  }, [date, range]);
+  });
 
   const valid = TIME.test(bed) && TIME.test(wake);
   const duration = valid ? hoursBetween(bed, wake) : 0;

@@ -18,7 +18,7 @@ export default function Training() {
   const date = today();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { data, setData, refreshing, refresh } = useLoad(async () => {
+  const { data, setData, refreshing, refresh } = useLoad(`training:${date}`, async () => {
     const [log, programs, streak, recent] = await Promise.all([
       api.get<WorkoutLog | null>(`/training/logs/${date}`),
       api.get<TrainingProgram[]>('/training/programs'),
@@ -26,7 +26,7 @@ export default function Training() {
       api.get<WorkoutLog[]>('/training/logs', { params: { limit: 10 } }),
     ]);
     return { log, program: programs[0] || null, streak, recent };
-  }, [date]);
+  });
 
   const program = data?.program;
   const day = program?.schedule?.[todayIndex()];
@@ -56,9 +56,17 @@ export default function Training() {
     totalCaloriesBurnt: (day?.exercises || []).length * 50,
   });
 
-  const toggle = (i: number) => {
+  // Optimistic: the tick shows on tap; the server save runs behind it
+  const toggle = async (i: number) => {
     if (!log) return;
-    save({ ...log, exercises: log.exercises.map((e, j) => (j === i ? { ...e, completed: !e.completed } : e)) });
+    const updated = { ...log, exercises: log.exercises.map((e, j) => (j === i ? { ...e, completed: !e.completed } : e)) };
+    setData(d => (d ? { ...d, log: updated } : d));
+    try {
+      await api.post<WorkoutLog>('/training/logs', { ...updated, date });
+    } catch (err) {
+      setError(errorMessage(err));
+      refresh();
+    }
   };
 
   return (

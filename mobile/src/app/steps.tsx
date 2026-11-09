@@ -19,13 +19,13 @@ export default function Steps() {
   const [range, setRange] = useState<7 | 30>(7);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { data, reload, refreshing, refresh } = useLoad(async () => {
+  const { data, reload, refreshing, refresh } = useLoad(`steps:${date}:${range}`, async () => {
     const [log, hist] = await Promise.all([
       api.get<StepsLog>(`/steps/${date}`),
       api.get<StepsLog[]>('/steps/history/week', { params: { startDate: rangeStart(range), days: range } }),
     ]);
     return { log, series: dailySeries(hist, range, l => l.steps) };
-  }, [date, range]);
+  });
 
   const count = data?.log.steps || 0;
 

@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ring } from '../../components/charts';
-import { Big, Button, Card, Chip, Chips, Label, ProgressBar, Screen } from '../../components/ui';
+import { Big, Button, Card, Chip, Chips, Label, ProgressBar, Screen, Skeleton } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { longDate, today } from '../../lib/date';
@@ -15,7 +15,7 @@ export default function Home() {
   const c = useColors();
   const { user } = useAuth();
   const date = today();
-  const { data, refreshing, refresh, error } = useLoad<Day>(async () => {
+  const { data, refreshing, refresh, error } = useLoad<Day>(`home:${date}`, async () => {
     const [nutrition, water, steps, sleep, workout, streak] = await Promise.all([
       api.get<NutritionLog>(`/nutrition/${date}`),
       api.get<WaterLog>(`/water/${date}`),
@@ -25,7 +25,7 @@ export default function Home() {
       api.get<{ streak: number }>('/training/streak'),
     ]);
     return { nutrition, water, steps, sleep, workout, streak };
-  }, [date]);
+  });
 
   const calTarget = user?.dailyCalorieTarget || 2000;
   const kcal = Math.round(data?.nutrition.totals.calories || 0);
@@ -51,7 +51,9 @@ export default function Home() {
 
   return (
     <Screen title={`Hey ${user?.name?.split(' ')[0] || ''}`} subtitle={longDate(date).toLowerCase()} refreshing={refreshing} onRefresh={refresh}>
-      {error ? <Text style={{ color: c.coral }}>{error}</Text> : null}
+      {error && data ? <Text style={{ color: c.ink50, fontSize: 12 }}>Showing saved data · {error}</Text> : null}
+      {!data && (error ? <Text style={{ color: c.coral }}>{error}</Text> : <Skeleton heights={[160, 120, 120, 90]} />)}
+      {data && <>
 
       <Card tone="lime" style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         <Ring value={kcal} max={calTarget} size={128} stroke={12} trackColor="rgba(14,14,16,0.14)" color="#0e0e10">
@@ -97,6 +99,7 @@ export default function Home() {
           <Button title="Set up health sync" variant="lime" small onPress={() => router.push('/health')} />
         </Card>
       )}
+      </>}
     </Screen>
   );
 }

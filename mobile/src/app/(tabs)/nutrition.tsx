@@ -3,7 +3,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { BarChart, Ring } from '../../components/charts';
-import { Button, Card, CardHeader, Empty, Label, ProgressBar, Row, Screen, Segmented } from '../../components/ui';
+import { Button, Card, CardHeader, Empty, Label, ProgressBar, Row, Screen, Segmented, Skeleton } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { addDays, dailySeries, longDate, loggedAverage, parseDate, rangeStart, toDateStr, today } from '../../lib/date';
@@ -18,13 +18,13 @@ export default function Nutrition() {
   const { user } = useAuth();
   const [date, setDate] = useState(today());
   const [range, setRange] = useState<7 | 30>(7);
-  const { data, setData, refreshing, refresh } = useLoad(async () => {
+  const { data, setData, refreshing, refresh } = useLoad(`nutrition:${date}:${range}`, async () => {
     const [log, history] = await Promise.all([
       api.get<NutritionLog>(`/nutrition/${date}`),
       api.get<NutritionLog[]>('/nutrition/summary/week', { params: { startDate: rangeStart(range), days: range } }),
     ]);
     return { log, series: dailySeries(history, range, l => l.totals?.calories) };
-  }, [date, range]);
+  });
 
   const target = user?.dailyCalorieTarget || 2000;
   const totals = data?.log.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
@@ -38,8 +38,19 @@ export default function Nutrition() {
       {
         text: 'Remove', style: 'destructive',
         onPress: async () => {
-          const log = await api.del<NutritionLog>(`/nutrition/${date}/food/${foodId}`);
-          setData(d => (d ? { ...d, log } : d));
+          // Optimistic: the row disappears immediately and totals update
+          setData(d => {
+            if (!d) return d;
+            const foods = d.log.foods.filter(f => f._id !== foodId);
+            const sum = (k: 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber') => foods.reduce((s, f) => s + (f[k] || 0), 0);
+            return { ...d, log: { ...d.log, foods, totals: { calories: sum('calories'), protein: sum('protein'), carbs: sum('carbs'), fat: sum('fat'), fiber: sum('fiber') } } };
+          });
+          try {
+            const log = await api.del<NutritionLog>(`/nutrition/${date}/food/${foodId}`);
+            setData(d => (d ? { ...d, log } : d));
+          } catch {
+            refresh();
+          }
         },
       },
     ]);
@@ -61,6 +72,8 @@ export default function Nutrition() {
         </Pressable>
       </View>
 
+      {!data && <Skeleton heights={[150, 220]} />}
+      {data && <>
       <Card tone="lime" style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
         <Ring value={totals.calories} max={target} size={120} stroke={11} trackColor="rgba(14,14,16,0.14)" color="#0e0e10">
           <Text style={{ fontSize: 26, fontWeight: '800', color: '#0e0e10' }}>{Math.round(totals.calories)}</Text>
@@ -121,6 +134,7 @@ export default function Nutrition() {
         <View style={{ height: 8 }} />
         <BarChart data={data?.series || []} target={target} todayDate={today()} colorByTarget={false} format={v => `${Math.round(v)} kcal`} />
       </Card>
+      </>}
     </Screen>
   );
 }

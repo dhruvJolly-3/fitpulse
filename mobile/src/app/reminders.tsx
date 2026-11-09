@@ -35,7 +35,7 @@ export default function RemindersScreen() {
   const { updateUser } = useAuth();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const { data, setData, refreshing, refresh } = useLoad(() => api.get<Settings>('/reminders/settings'));
+  const { data, setData, refreshing, refresh } = useLoad('reminders', () => api.get<Settings>('/reminders/settings'));
 
   const save = async (patch: Record<string, unknown>) => {
     setMsg(null);

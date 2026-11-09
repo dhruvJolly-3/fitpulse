@@ -3,7 +3,7 @@ import { Alert, Dimensions, Modal, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AuthImage } from '../../components/AuthImage';
 import { LineChart } from '../../components/charts';
-import { Big, Button, Card, CardHeader, Chip, Chips, Empty, ErrorText, Field, Label, Row, Screen, Segmented } from '../../components/ui';
+import { Big, Button, Card, CardHeader, Chip, Chips, Empty, ErrorText, Field, Label, Row, Screen, Segmented, Skeleton } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { dayMonth, longDate, today } from '../../lib/date';
@@ -28,13 +28,13 @@ export default function Progress() {
   const [viewer, setViewer] = useState<Photo | null>(null);
   const [compare, setCompare] = useState<string[]>([]);
 
-  const { data, reload, refreshing, refresh } = useLoad(async () => {
+  const { data, reload, refreshing, refresh } = useLoad(`progress:${date}:${range}`, async () => {
     const [history, photos] = await Promise.all([
       api.get<WeightHistory>('/weight/history', { params: { days: range, endDate: date } }),
       api.get<Photo[]>('/photos'),
     ]);
     return { history, photos };
-  }, [range, date]);
+  });
 
   const entries = data?.history.entries || [];
   const latest = entries[entries.length - 1];
@@ -90,6 +90,8 @@ export default function Progress() {
 
   return (
     <Screen title="Progress" subtitle="weight trend and progress photos" refreshing={refreshing} onRefresh={refresh}>
+      {!data && <Skeleton heights={[110, 140, 220]} />}
+      {data && <>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <Card tone="dark" style={{ flex: 1, gap: 6 }}>
           <Label tone="dark">latest</Label>
@@ -169,6 +171,7 @@ export default function Progress() {
           <Empty title="Your first photo is your baseline" text="Same light, same pose, every 2–4 weeks. Long-press a photo to open or delete it." />
         )}
       </Card>
+      </>}
 
       <Modal visible={Boolean(viewer)} animationType="fade" transparent onRequestClose={() => setViewer(null)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', padding: 16, gap: 12 }}>

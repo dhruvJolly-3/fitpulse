@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput,
+  ActivityIndicator, Animated, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput,
   View, type StyleProp, type TextInputProps, type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -230,6 +230,27 @@ export function ErrorText({ children }: { children?: string | null }) {
     <View style={{ borderRadius: radius.sm, padding: 10, backgroundColor: 'rgba(255,91,61,0.12)' }} accessibilityRole="alert">
       <Text style={{ color: c.coral, fontSize: 13, fontWeight: '600' }}>{children}</Text>
     </View>
+  );
+}
+
+// Placeholder cards in the shape of the real ones, shown only on the very
+// first load of a screen (afterwards cached data appears instantly).
+// The pulse runs on the native driver, so it never blocks the JS thread.
+export function Skeleton({ heights = [150, 110, 110] }: { heights?: number[] }) {
+  const c = useColors();
+  const [pulse] = useState(() => new Animated.Value(0.55));
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(pulse, { toValue: 0.55, duration: 700, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+  return (
+    <Animated.View style={{ gap: 12, opacity: pulse }} accessibilityLabel="Loading" accessibilityRole="progressbar">
+      {heights.map((h, i) => <View key={i} style={{ height: h, borderRadius: radius.lg, backgroundColor: c.bone }} />)}
+    </Animated.View>
   );
 }
 
