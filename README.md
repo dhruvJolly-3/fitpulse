@@ -104,7 +104,9 @@ Your day at a glance: calorie ring, macro progress, hydration, steps, sleep, TDE
 
 ### 🍽️ Nutrition
 - Log food by meal: breakfast, lunch, dinner, snacks, pre/post-workout
-- Quick-pick foods plus custom entries with full macros
+- **Food search** across 60+ built-in Indian dishes (roti, dal, paneer, biryani…) and ~3M packaged foods from **Open Food Facts**
+- **Barcode scanning** with the camera (native BarcodeDetector, with a ZXing fallback for Safari / Firefox), or type the number
+- Log by servings or grams, and macros scale automatically. Custom entries are still available
 - Live **protein / carbs / fat / fiber** progress against your targets
 - Calorie trends over **7 or 30 days**
 
@@ -128,6 +130,12 @@ Your day at a glance: calorie ring, macro progress, hydration, steps, sleep, TDE
 - Keeps playing while you move between pages
 - **Pop-out player** that floats over other apps (Chrome / Edge desktop), plus keyboard media keys and lock-screen controls
 
+### ⚖️ Progress: weight and photos
+- Daily **weigh-ins** with optional body-fat %, and a **trend line** (7-entry moving average) over 30 days, 90 days or 1 year
+- A new weigh-in updates your profile weight and **recalculates calorie and macro targets**
+- **Progress photos** (front / side / back), resized on your device before upload, kept private to your account
+- Tap two photos to **compare them side by side**, with the weight change between them
+
 ### 💧 Hydration
 One-tap quick-adds, drink types (water, green tea, coffee, juice, sports drinks), and daily and monthly trends.
 
@@ -149,6 +157,20 @@ Step logging with auto-calculated distance, calories burned and active minutes, 
 - **Forgot password** with a secure one-time email link
 - Rate-limited sign-in, sign-up and reset endpoints to block brute-force attempts
 
+### 🔔 Smart reminders
+- Push notifications for **hydration, workout, food log, bedtime and weigh-in**, at times you choose, in your own timezone
+- **Smart:** a reminder is skipped when it isn't needed. Examples: you're on pace for water, today's workout is already logged, you've already weighed in
+- Works in the browser / installed PWA (Web Push) and in the mobile app (Expo push)
+- A scheduled GitHub Action wakes the free-tier API every 15 minutes so reminders still go out
+
+### 🔄 Health sync (Health Connect / Apple Health)
+- The mobile app reads **steps, distance, active calories, sleep, workouts and weight** from Health Connect (Android) or Apple Health (iPhone), and uploads daily summaries
+- Your own entries always win: steps keep the higher count, and synced sleep and weight only fill empty days
+- Watch workouts show up on the training page and count toward your streak
+
+### 📲 Mobile app (React Native)
+- Full **Expo / React Native** app in [`mobile/`](mobile/README.md) on the same API: dashboard, nutrition with barcode scanner, training, progress photos, water, sleep, activity, reminders and health sync
+
 ### 📱 App experience
 - **Installable (PWA)**: home-screen icon, full-screen launch, offline-ready shell and an install banner
 - **Light / dark mode** with a smooth cross-fade
@@ -169,9 +191,10 @@ Step logging with auto-calculated distance, calories burned and active minutes, 
 | **Backend** | Node.js · Express 4 · express-validator · Morgan |
 | **Database** | MongoDB Atlas · Mongoose |
 | **Auth and security** | JWT · bcrypt · Google Identity Services · SHA-256 hashed reset tokens · rate limiting · CORS allowlist · central error handling |
-| **Integrations** | YouTube Data API v3 · YouTube IFrame Player API · Spotify Web API + Web Playback SDK (OAuth PKCE) · TheMealDB · Nodemailer (SMTP) |
+| **Mobile** | Expo SDK 58 · React Native · Expo Router · TypeScript · expo-camera · Health Connect · HealthKit · Expo push |
+| **Integrations** | Open Food Facts · Web Push (VAPID) · YouTube Data API v3 · YouTube IFrame Player API · Spotify Web API + Web Playback SDK (OAuth PKCE) · TheMealDB · Nodemailer (SMTP) |
 | **Browser APIs** | Service Worker · Web App Manifest · Media Session · Document Picture-in-Picture |
-| **Testing** | Node test runner API suite (auth, profile, logs, rate limits) |
+| **Testing** | Node test runner API suite (56 tests: auth, profile, logs, rate limits, weight, photos, foods, reminders, health sync) |
 | **Hosting** | Vercel (frontend) · Render (API) |
 
 **Highlights**
@@ -218,6 +241,9 @@ npm run dev
 | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `MAIL_FROM` | | Password-reset email |
 | `GOOGLE_CLIENT_ID` | | Google sign-in |
 | `YOUTUBE_API_KEY` | | Music search and in-app exercise videos |
+| `VAPID_PUBLIC_KEY` `VAPID_PRIVATE_KEY` `VAPID_SUBJECT` | | Browser push reminders (`npx web-push generate-vapid-keys`) |
+| `CRON_SECRET` | | Protects `POST /api/reminders/run`. Use the same value as a GitHub Actions secret |
+| `FOOD_API` | | Set to `off` to use only the built-in food list |
 | `MEALDB_API_KEY` | | Recipes (free test key by default) |
 
 **Client**
@@ -229,6 +255,15 @@ npm run dev
 | `REACT_APP_SPOTIFY_CLIENT_ID` | Spotify login and playback |
 
 > Optional integrations stay off until their keys are set, so the app runs fully without them.
+
+**Turning on smart reminders in production**
+1. Generate keys with `cd server && npx web-push generate-vapid-keys`, then add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:you@…`) on Render.
+2. Set `CRON_SECRET` on Render. The Blueprint generates one for you.
+3. In GitHub, go to **Settings → Secrets → Actions** and add `FITPULSE_API_URL` (your Render URL) and `CRON_SECRET` (the same value). The **Smart reminders** workflow then runs every 15 minutes.
+
+### Mobile app
+
+See [`mobile/README.md`](mobile/README.md). In short: `cd mobile && npm install && npx expo start`. Health sync and push notifications need a development build (`eas build --profile development`).
 
 ### Running the tests
 
@@ -246,9 +281,13 @@ TEST_MONGODB_URI=mongodb://localhost:27017/fitpulse_test npm test
 ```
 fitpulse/
 ├── server/
-│   ├── models/        User · NutritionLog · Training · Metrics
+│   ├── models/        User · NutritionLog · Training · Metrics · WeightLog
+│   │                  ProgressPhoto · PushSubscription
+│   ├── services/      smart reminder engine
+│   ├── data/          built-in Indian food list
 │   ├── routes/        auth · user · nutrition · training · water · sleep
-│   │                  steps · goals · recipes · videos
+│   │                  steps · goals · recipes · videos · weight · photos
+│   │                  foods · reminders · healthSync
 │   ├── middleware/    JWT auth · validation · rate limiting · error handling
 │   ├── tests/         API test suite
 │   └── utils/         mailer · cache · async handler
@@ -265,6 +304,8 @@ fitpulse/
 │       ├── context/     Auth + API client · theme (light/dark)
 │       └── index.css    Design system, themes and motion
 │
+├── mobile/            Expo / React Native app (see mobile/README.md)
+├── .github/workflows/ reminders.yml (every 15 min)
 └── docs/screenshots/  README images
 ```
 
@@ -287,6 +328,12 @@ All endpoints except auth and health need `Authorization: Bearer <token>`.
 | `GET` | `/api/{water,sleep,steps}/history/week?startDate=&days=` | 7–30 day history |
 | `GET` | `/api/recipes/search` · `/api/recipes/:id` | Recipes |
 | `GET` | `/api/videos/search?q=` · `/api/videos/music?q=` | Exercise videos and music search |
+| `GET` `POST` `DELETE` | `/api/weight/history?days=` · `/api/weight` · `/api/weight/:date` | Weigh-ins, trend and summary |
+| `GET` `POST` `DELETE` | `/api/photos` · `/api/photos/:id/image?size=thumb` · `/api/photos/:id` | Progress photos |
+| `GET` | `/api/foods/search?q=` · `/api/foods/barcode/:code` | Food database and barcode lookup |
+| `GET` `PUT` `POST` `DELETE` | `/api/reminders/settings` · `/devices` · `/test` | Reminder settings and push devices |
+| `POST` | `/api/reminders/run` (header `X-Cron-Secret`) | Sends any reminders that are due (called by cron) |
+| `POST` `GET` | `/api/health-sync` · `/api/health-sync/status` | Health Connect / Apple Health import |
 | `GET` | `/api/health` | Service status |
 
 ---
@@ -307,12 +354,16 @@ All endpoints except auth and health need `Authorization: Bearer <token>`.
 - [x] Auth rate limiting, midnight date rollover and an API test suite
 - [x] Faster first load when the API is cold-starting
 
+- [x] Health sync with Health Connect (Android) and Apple Health (iPhone): steps, sleep, workouts, weight
+- [x] Food database (Indian dishes + Open Food Facts) with barcode scanning
+- [x] Daily weight log with trend chart
+- [x] Smart reminders via push notifications (web + mobile)
+- [x] Progress photos with side-by-side compare
+- [x] React Native mobile app (Expo)
+
 **Next**
-- [ ] Google Health / Fitbit sync (steps, sleep, workouts)
-- [ ] Large food database with barcode scanning and photo logging
-- [ ] Daily weight log with trend chart
-- [ ] Smart reminders via push notifications
-- [ ] Progress photos
+- [ ] Photo-based food logging
+- [ ] Publish the Android app on the Play Store
 
 ---
 
