@@ -66,7 +66,7 @@ function Scanner({ onCode }: { onCode: (code: string) => void }) {
         <Text style={{ color: c.ink50 }}>Camera scanning works in the phone app. Type the number under the barcode instead.</Text>
       )}
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
-        <Field label="Or type the barcode" value={manual} onChangeText={t => setManual(t.replace(/\D/g, ''))} keyboardType="number-pad" placeholder="8901234567890" />
+        <Field grow label="Or type the barcode" value={manual} onChangeText={t => setManual(t.replace(/\D/g, ''))} keyboardType="number-pad" placeholder="8901234567890" />
         <Button title="Look up" small disabled={manual.length < 6} onPress={() => onCode(manual)} />
       </View>
     </View>
@@ -157,7 +157,7 @@ export default function LogFood() {
           <Segmented value={unit} onChange={u => { setUnit(u); setAmount(u === 'serving' ? '1' : String(picked.serving.grams)); }}
             options={[{ value: 'serving', label: `Servings (${picked.serving.label})` }, { value: 'grams', label: 'Grams' }]} />
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
-            <Field label="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" suffix={unit === 'serving' ? '×' : 'g'} />
+            <Field grow label="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" suffix={unit === 'serving' ? '×' : 'g'} />
             <Text style={{ color: c.ink, fontWeight: '800', fontSize: 20, paddingBottom: 12 }}>{preview.calories} kcal</Text>
           </View>
           <Text style={{ color: c.ink50, fontSize: 12 }}>
@@ -192,12 +192,12 @@ export default function LogFood() {
         <Card style={{ gap: 10 }}>
           <Field label="Food name" value={custom.name} onChangeText={v => setCustom(x => ({ ...x, name: v }))} placeholder="Homemade dal" />
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Field label="Calories" value={custom.calories} onChangeText={v => setCustom(x => ({ ...x, calories: v }))} keyboardType="decimal-pad" />
-            <Field label="Protein" value={custom.protein} onChangeText={v => setCustom(x => ({ ...x, protein: v }))} keyboardType="decimal-pad" suffix="g" />
+            <Field grow label="Calories" value={custom.calories} onChangeText={v => setCustom(x => ({ ...x, calories: v }))} keyboardType="decimal-pad" />
+            <Field grow label="Protein" value={custom.protein} onChangeText={v => setCustom(x => ({ ...x, protein: v }))} keyboardType="decimal-pad" suffix="g" />
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Field label="Carbs" value={custom.carbs} onChangeText={v => setCustom(x => ({ ...x, carbs: v }))} keyboardType="decimal-pad" suffix="g" />
-            <Field label="Fat" value={custom.fat} onChangeText={v => setCustom(x => ({ ...x, fat: v }))} keyboardType="decimal-pad" suffix="g" />
+            <Field grow label="Carbs" value={custom.carbs} onChangeText={v => setCustom(x => ({ ...x, carbs: v }))} keyboardType="decimal-pad" suffix="g" />
+            <Field grow label="Fat" value={custom.fat} onChangeText={v => setCustom(x => ({ ...x, fat: v }))} keyboardType="decimal-pad" suffix="g" />
           </View>
           <Label>Calories and name are required</Label>
           <Button title="Add food" loading={saving} disabled={!custom.name.trim() || !custom.calories}

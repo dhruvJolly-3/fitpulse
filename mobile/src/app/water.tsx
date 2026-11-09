@@ -83,7 +83,7 @@ export default function Water() {
           {QUICK.map(a => <Button key={a} title={`${a}`} small variant="ghost" style={{ flex: 1, paddingHorizontal: 4 }} onPress={() => add(a)} accessibilityLabel={`Add ${a} millilitres`} />)}
         </View>
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <Field value={custom} onChangeText={t => setCustom(t.replace(/\D/g, ''))} keyboardType="number-pad" suffix="ml" placeholder="Custom" accessibilityLabel="Custom amount in millilitres" />
+          <Field grow value={custom} onChangeText={t => setCustom(t.replace(/\D/g, ''))} keyboardType="number-pad" suffix="ml" placeholder="Custom" accessibilityLabel="Custom amount in millilitres" />
           <Button title="+ Add" disabled={!+custom} onPress={() => { add(+custom); setCustom(''); }} />
         </View>
       </Card>

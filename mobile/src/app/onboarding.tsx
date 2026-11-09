@@ -55,12 +55,12 @@ export default function Onboarding() {
     <Screen title={`Hi ${user?.name?.split(' ')[0] || 'there'} 👋`} subtitle="a few numbers to personalise your targets">
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Age" value={form.age} onChangeText={set('age')} keyboardType="number-pad" placeholder="25" />
-          <Field label="Height" value={form.height} onChangeText={set('height')} keyboardType="decimal-pad" suffix="cm" placeholder="175" />
+          <Field grow label="Age" value={form.age} onChangeText={set('age')} keyboardType="number-pad" placeholder="25" />
+          <Field grow label="Height" value={form.height} onChangeText={set('height')} keyboardType="decimal-pad" suffix="cm" placeholder="175" />
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Weight" value={form.weight} onChangeText={set('weight')} keyboardType="decimal-pad" suffix="kg" placeholder="70" />
-          <Field label="Target (optional)" value={form.targetWeight} onChangeText={set('targetWeight')} keyboardType="decimal-pad" suffix="kg" placeholder="65" />
+          <Field grow label="Weight" value={form.weight} onChangeText={set('weight')} keyboardType="decimal-pad" suffix="kg" placeholder="70" />
+          <Field grow label="Target (optional)" value={form.targetWeight} onChangeText={set('targetWeight')} keyboardType="decimal-pad" suffix="kg" placeholder="65" />
         </View>
         <Label>Gender</Label>
         <Chips>{(['male', 'female', 'other'] as const).map(g => <Chip key={g} label={g[0].toUpperCase() + g.slice(1)} on={gender === g} onPress={() => setGender(g)} />)}</Chips>

@@ -67,8 +67,8 @@ export default function Sleep() {
       <Card style={{ gap: 12 }}>
         <CardHeader title={data?.log ? 'Update last night' : 'Log last night'} right={valid ? <Label>{duration} h</Label> : undefined} />
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Bedtime" value={bed} onChangeText={setBed} placeholder="23:00" keyboardType="numbers-and-punctuation" />
-          <Field label="Woke up" value={wake} onChangeText={setWake} placeholder="07:00" keyboardType="numbers-and-punctuation" />
+          <Field grow label="Bedtime" value={bed} onChangeText={setBed} placeholder="23:00" keyboardType="numbers-and-punctuation" />
+          <Field grow label="Woke up" value={wake} onChangeText={setWake} placeholder="07:00" keyboardType="numbers-and-punctuation" />
         </View>
         <Label>Quality</Label>
         <Chips>{[1, 2, 3, 4, 5].map(q => <Chip key={q} label={'★'.repeat(q)} on={quality === q} onPress={() => setQuality(q)} />)}</Chips>

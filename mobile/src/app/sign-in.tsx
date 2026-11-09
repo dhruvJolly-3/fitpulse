@@ -48,9 +48,9 @@ export default function SignIn() {
 
         <Card style={{ gap: 12 }}>
           <Segmented value={mode} onChange={setMode} options={[{ value: 'in', label: 'Sign in' }, { value: 'up', label: 'Create account' }]} />
-          {mode === 'up' && <Field label="Name" value={name} onChangeText={setName} autoComplete="name" placeholder="Your name" />}
-          <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" placeholder="you@example.com" />
-          <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete={mode === 'in' ? 'current-password' : 'new-password'} placeholder="At least 6 characters" onSubmitEditing={valid ? submit : undefined} />
+          {mode === 'up' && <Field label="Name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" placeholder="Your name" />}
+          <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" autoCorrect={false} placeholder="you@example.com" />
+          <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete={mode === 'in' ? 'current-password' : 'new-password'} textContentType={mode === 'in' ? 'password' : 'newPassword'} placeholder="At least 6 characters" onSubmitEditing={valid ? submit : undefined} />
           <ErrorText>{error}</ErrorText>
           <Button title={mode === 'in' ? 'Sign in' : 'Create account'} onPress={submit} loading={busy} disabled={!valid} />
           <Text style={{ color: c.ink50, fontSize: 12, textAlign: 'center' }}>

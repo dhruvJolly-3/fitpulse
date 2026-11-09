@@ -113,10 +113,13 @@ export function Button({ title, onPress, variant = 'primary', small, disabled, l
   );
 }
 
-export function Field({ label, suffix, ...props }: TextInputProps & { label?: string; suffix?: string }) {
+// `grow`: share the width of a row with siblings. Leave it off in a column:
+// on native (Yoga) `flex: 1` inside an auto-height column collapses the
+// field to zero height; browsers lay the same style out differently.
+export function Field({ label, suffix, grow, ...props }: TextInputProps & { label?: string; suffix?: string; grow?: boolean }) {
   const c = useColors();
   return (
-    <View style={{ flex: 1, minWidth: 0 }}>
+    <View style={grow ? { flex: 1, minWidth: 0 } : { alignSelf: 'stretch' }}>
       {label ? <Text style={[s.label, { color: c.ink50, marginBottom: 6 }]}>{label}</Text> : null}
       <View style={[s.input, { backgroundColor: c.bone, borderColor: c.line }]}>
         <TextInput

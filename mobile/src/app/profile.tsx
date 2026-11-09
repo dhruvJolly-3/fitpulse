@@ -62,12 +62,12 @@ export default function Profile() {
         <CardHeader title="Body" />
         <Field label="Name" value={form.name} onChangeText={set('name')} />
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Age" value={form.age} onChangeText={set('age')} keyboardType="number-pad" />
-          <Field label="Height" value={form.height} onChangeText={set('height')} keyboardType="decimal-pad" suffix="cm" />
+          <Field grow label="Age" value={form.age} onChangeText={set('age')} keyboardType="number-pad" />
+          <Field grow label="Height" value={form.height} onChangeText={set('height')} keyboardType="decimal-pad" suffix="cm" />
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Weight" value={form.weight} onChangeText={set('weight')} keyboardType="decimal-pad" suffix="kg" />
-          <Field label="Target" value={form.targetWeight} onChangeText={set('targetWeight')} keyboardType="decimal-pad" suffix="kg" />
+          <Field grow label="Weight" value={form.weight} onChangeText={set('weight')} keyboardType="decimal-pad" suffix="kg" />
+          <Field grow label="Target" value={form.targetWeight} onChangeText={set('targetWeight')} keyboardType="decimal-pad" suffix="kg" />
         </View>
         <Label>Goal</Label>
         <Chips>{GOALS.map(([v, l]) => <Chip key={v} label={l} on={goal === v} onPress={() => { setGoal(v); setSaved(false); }} />)}</Chips>
@@ -79,8 +79,8 @@ export default function Profile() {
       <Card style={{ gap: 12 }}>
         <CardHeader title="Daily targets" />
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field label="Water" value={form.waterTarget} onChangeText={set('waterTarget')} keyboardType="number-pad" suffix="ml" />
-          <Field label="Sleep" value={form.sleepTarget} onChangeText={set('sleepTarget')} keyboardType="decimal-pad" suffix="h" />
+          <Field grow label="Water" value={form.waterTarget} onChangeText={set('waterTarget')} keyboardType="number-pad" suffix="ml" />
+          <Field grow label="Sleep" value={form.sleepTarget} onChangeText={set('sleepTarget')} keyboardType="decimal-pad" suffix="h" />
         </View>
         <Field label="Steps" value={form.stepTarget} onChangeText={set('stepTarget')} keyboardType="number-pad" />
       </Card>

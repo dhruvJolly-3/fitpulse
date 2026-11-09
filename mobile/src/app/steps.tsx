@@ -62,7 +62,7 @@ export default function Steps() {
       <Card style={{ gap: 10 }}>
         <CardHeader title="Log steps manually" />
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <Field value={steps} onChangeText={t => setSteps(t.replace(/\D/g, ''))} keyboardType="number-pad" placeholder={String(count || 8000)} accessibilityLabel="Steps today" />
+          <Field grow value={steps} onChangeText={t => setSteps(t.replace(/\D/g, ''))} keyboardType="number-pad" placeholder={String(count || 8000)} accessibilityLabel="Steps today" />
           <Button title="Save" onPress={save} loading={saving} disabled={!parseInt(steps, 10)} />
         </View>
         <ErrorText>{error}</ErrorText>

@@ -112,8 +112,8 @@ export default function Progress() {
       <Card style={{ gap: 10 }}>
         <CardHeader title={todayEntry ? 'Update today' : "Today's weigh-in"} right={todayEntry ? <Label>{todayEntry.weight} kg logged</Label> : undefined} />
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Field value={weight} onChangeText={setWeight} keyboardType="decimal-pad" suffix="kg" placeholder={String(latest?.weight || user?.profile?.weight || 70)} accessibilityLabel="Weight in kg" />
-          <Field value={bodyFat} onChangeText={setBodyFat} keyboardType="decimal-pad" suffix="%" placeholder="Body fat" accessibilityLabel="Body fat percent, optional" />
+          <Field grow value={weight} onChangeText={setWeight} keyboardType="decimal-pad" suffix="kg" placeholder={String(latest?.weight || user?.profile?.weight || 70)} accessibilityLabel="Weight in kg" />
+          <Field grow value={bodyFat} onChangeText={setBodyFat} keyboardType="decimal-pad" suffix="%" placeholder="Body fat" accessibilityLabel="Body fat percent, optional" />
         </View>
         <Button title="Save weigh-in" onPress={logWeight} loading={busy === 'weight'} disabled={!parseFloat(weight)} />
       </Card>
