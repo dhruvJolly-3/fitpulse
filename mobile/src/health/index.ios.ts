@@ -1,10 +1,28 @@
 // iPhone: Apple Health (HealthKit).
 // Needs a development/production build; Expo Go does not include this native module.
-import {
-  isHealthDataAvailableAsync, queryCategorySamples, queryQuantitySamples, queryStatisticsForQuantity,
-  queryWorkoutSamples, requestAuthorization,
-} from '@kingstinct/react-native-healthkit';
+// The library creates its native objects on import, so it is required lazily:
+// importing it at the top would crash the whole app in Expo Go.
+import type * as HealthKitModule from '@kingstinct/react-native-healthkit';
 import { dayWindows, round, wakeDate, type HealthDay, type HealthPlatform } from './types';
+
+let cached: typeof HealthKitModule | null | undefined;
+const load = (): typeof HealthKitModule | null => {
+  if (cached === undefined) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      cached = require('@kingstinct/react-native-healthkit') as typeof HealthKitModule;
+    } catch {
+      cached = null;
+    }
+  }
+  return cached;
+};
+const NOT_IN_EXPO_GO = 'Health sync needs the installed FitPulse app (not Expo Go).';
+const hk = () => {
+  const mod = load();
+  if (!mod) throw new Error(NOT_IN_EXPO_GO);
+  return mod;
+};
 
 const READ = [
   'HKQuantityTypeIdentifierStepCount',
@@ -24,18 +42,19 @@ export const health: HealthPlatform = {
 
   async unavailableReason() {
     try {
-      return (await isHealthDataAvailableAsync()) ? null : 'Apple Health is not available on this device.';
+      return (await hk().isHealthDataAvailableAsync()) ? null : 'Apple Health is not available on this device.';
     } catch {
-      return 'Health sync needs the installed FitPulse app (not Expo Go).';
+      return NOT_IN_EXPO_GO;
     }
   },
 
   async requestAccess() {
     // iOS never reveals whether read access was granted; it just returns no data if not
-    return requestAuthorization({ toRead: READ });
+    return hk().requestAuthorization({ toRead: READ });
   },
 
   async readDays(days) {
+    const { queryCategorySamples, queryQuantitySamples, queryStatisticsForQuantity, queryWorkoutSamples } = hk();
     const windows = dayWindows(days);
     const from = windows[0].start;
     const to = new Date();

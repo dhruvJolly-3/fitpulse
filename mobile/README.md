@@ -28,6 +28,14 @@ npx expo start
 - **API URL:** `EXPO_PUBLIC_API_URL` in `.env`. Use `http://10.0.2.2:5001` for the Android emulator, or `http://<your PC's LAN IP>:5001` for a real phone on the same Wi-Fi. If it's not set, the app uses `expo.extra.apiUrl` in `app.json`, which should be your deployed Render URL. Check that the URL is right before building.
 - **Expo Go** runs everything except health sync and push notifications. Those need native modules or an EAS project.
 
+### Testing on an iPhone without a paid Apple account
+
+1. Install **Expo Go** from the App Store.
+2. On your computer, run `npx expo start --tunnel`. `--tunnel` works even when the phone and PC are on different networks.
+3. Scan the QR code with the iPhone camera.
+
+Everything works except Apple Health sync and push notifications. Those screens explain that they need the installed app. The health libraries load only when they are used, so Expo Go doesn't crash.
+
 ### Development build (needed for health sync and push)
 
 ```bash
