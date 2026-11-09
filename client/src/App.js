@@ -14,6 +14,7 @@ import StepsPage from './pages/StepsPage';
 import ProfilePage from './pages/ProfilePage';
 import OnboardingPage from './pages/OnboardingPage';
 import RecipesPage from './pages/RecipesPage';
+import ProgressPage from './pages/ProgressPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SpotifyCallbackPage from './pages/SpotifyCallbackPage';
@@ -47,6 +48,7 @@ const AppRoutes = () => {
         <Route path="sleep" element={<SleepPage />} />
         <Route path="steps" element={<StepsPage />} />
         <Route path="recipes" element={<RecipesPage />} />
+        <Route path="progress" element={<ProgressPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />

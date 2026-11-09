@@ -67,7 +67,7 @@ sleepRouter.post('/', auth, validate([
   body('notes').optional().isString().isLength({ max: 500 }).withMessage('Notes must be 500 characters or fewer'),
 ]), asyncHandler(async (req, res) => {
   // `user` is set last so a client can never write to another user's log
-  const data = { ...req.body, user: req.user._id };
+  const data = { ...req.body, source: 'manual', user: req.user._id }; // manual saves are never overwritten by a sync
   const existing = await SleepLog.findOne({ user: req.user._id, date: req.body.date });
   if (existing) {
     const updated = await SleepLog.findByIdAndUpdate(existing._id, data, { new: true, runValidators: true });
@@ -97,7 +97,7 @@ stepsRouter.post('/', auth, validate([
   body('caloriesBurnt').optional().isInt({ min: 0, max: 20000 }).withMessage('Calories must be 0–20,000').toInt(),
   body('activeMinutes').optional().isInt({ min: 0, max: 1440 }).withMessage('Active minutes must be 0–1440').toInt(),
 ]), asyncHandler(async (req, res) => {
-  const data = { ...req.body, user: req.user._id };
+  const data = { ...req.body, source: 'manual', user: req.user._id }; // manual saves are never overwritten by a sync
   const existing = await StepsLog.findOne({ user: req.user._id, date: req.body.date });
   if (existing) {
     const updated = await StepsLog.findByIdAndUpdate(existing._id, data, { new: true, runValidators: true });

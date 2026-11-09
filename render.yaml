@@ -19,3 +19,11 @@ services:
         generateValue: true # Render generates a random secret
       - key: CORS_ORIGINS
         sync: false # set to the Vercel URL after the frontend is deployed
+      - key: VAPID_PUBLIC_KEY
+        sync: false # npx web-push generate-vapid-keys
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false # mailto:you@example.com
+      - key: CRON_SECRET
+        generateValue: true # copy it into the GitHub secret of the same name

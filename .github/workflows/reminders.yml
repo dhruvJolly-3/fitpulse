@@ -1,0 +1,31 @@
+# Runs the smart-reminder check every 15 minutes.
+# Render's free tier sleeps when idle, so the API's own ticker can't be relied
+# on; this request both wakes the API and asks it to send any due reminders.
+#
+# Setup (GitHub → Settings → Secrets and variables → Actions):
+#   FITPULSE_API_URL  e.g. https://fitpulse-psmj.onrender.com  (no trailing slash)
+#   CRON_SECRET       same value as CRON_SECRET on Render
+name: Smart reminders
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger reminder run
+        env:
+          API_URL: ${{ secrets.FITPULSE_API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "FITPULSE_API_URL / CRON_SECRET not set; skipping."
+            exit 0
+          fi
+          # Retries cover the ~1 minute cold start on Render's free tier
+          curl --fail --silent --show-error --retry 4 --retry-delay 20 --retry-all-errors --max-time 90 \
+            -X POST "$API_URL/api/reminders/run" -H "X-Cron-Secret: $CRON_SECRET"

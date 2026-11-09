@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import HealthSyncCard from '../components/HealthSyncCard';
 import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format } from 'date-fns';
@@ -107,6 +108,7 @@ export default function StepsPage() {
       </header>
 
       <div className="page-body">
+        <HealthSyncCard />
         <div className="grid g-12">
           {/* Steps hero */}
           <div className="card lime span-7" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>

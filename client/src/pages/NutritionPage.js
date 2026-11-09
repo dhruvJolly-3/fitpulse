@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import BarcodeScanner from '../components/BarcodeScanner';
 import useToday from '../utils/useToday';
 import Pulse from '../components/Pulse';
 import { format, subDays, addDays } from 'date-fns';
@@ -11,29 +12,22 @@ import { rangeStart, dailySeries, loggedAverage } from '../utils/series';
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'];
 const MEAL_ICONS = { breakfast: '☀️', lunch: '🌤️', dinner: '🌙', snack: '🍎', pre_workout: '⚡', post_workout: '💪' };
 
-// Food database (sample - real app would use a full API like Nutritionix)
-const FOOD_DB = [
-  { name: 'Oats (100g)', calories: 389, protein: 17, carbs: 66, fat: 7 },
-  { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
-  { name: 'Brown Rice (100g cooked)', calories: 112, protein: 2.6, carbs: 24, fat: 0.9 },
-  { name: 'Whole Egg', calories: 78, protein: 6, carbs: 0.6, fat: 5 },
-  { name: 'Banana (medium)', calories: 89, protein: 1.1, carbs: 23, fat: 0.3 },
-  { name: 'Paneer (100g)', calories: 265, protein: 18, carbs: 1.2, fat: 20 },
-  { name: 'Dal (100g cooked)', calories: 116, protein: 9, carbs: 20, fat: 0.4 },
-  { name: 'Whey Protein (30g scoop)', calories: 120, protein: 24, carbs: 3, fat: 2 },
-  { name: 'Almonds (30g)', calories: 173, protein: 6, carbs: 6, fat: 15 },
-  { name: 'Greek Yogurt (100g)', calories: 59, protein: 10, carbs: 3.6, fat: 0.4 },
-  { name: 'Sweet Potato (100g)', calories: 86, protein: 1.6, carbs: 20, fat: 0.1 },
-  { name: 'Salmon (100g)', calories: 208, protein: 20, carbs: 0, fat: 13 },
-  { name: 'Roti (1 medium)', calories: 104, protein: 3, carbs: 20, fat: 1.5 },
-  { name: 'Rice (100g cooked)', calories: 130, protein: 2.7, carbs: 28, fat: 0.3 },
-  { name: 'Milk (250ml)', calories: 150, protein: 8, carbs: 12, fat: 8 },
-  { name: 'Apple (medium)', calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
-  { name: 'Peanut Butter (2 tbsp)', calories: 190, protein: 8, carbs: 6, fat: 16 },
-  { name: 'Broccoli (100g)', calories: 34, protein: 2.8, carbs: 7, fat: 0.4 },
-  { name: 'Tofu (100g)', calories: 76, protein: 8, carbs: 2, fat: 4.8 },
-  { name: 'Avocado (100g)', calories: 160, protein: 2, carbs: 9, fat: 15 },
-];
+// Scale a per-100 g food to an eaten amount (grams) → loggable entry
+const scaleFood = (food, grams) => {
+  const k = grams / 100;
+  const r = (v) => Math.round((v || 0) * k * 10) / 10;
+  return {
+    name: food.name,
+    brand: food.brand || undefined,
+    quantity: Math.round(grams),
+    unit: 'g',
+    calories: Math.round((food.per100g.calories || 0) * k),
+    protein: r(food.per100g.protein),
+    carbs: r(food.per100g.carbs),
+    fat: r(food.per100g.fat),
+    fiber: r(food.per100g.fiber),
+  };
+};
 
 export default function NutritionPage() {
   const { user } = useAuth();
@@ -46,7 +40,13 @@ export default function NutritionPage() {
   const [mealType, setMealType] = useState('breakfast');
   const [search, setSearch] = useState('');
   const [custom, setCustom] = useState({ name: '', calories: '', protein: '', carbs: '', fat: '', quantity: 100 });
-  const [addMode, setAddMode] = useState('search'); // 'search' | 'custom'
+  const [addMode, setAddMode] = useState('search'); // 'search' | 'scan' | 'custom'
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchNote, setSearchNote] = useState('');
+  const [selected, setSelected] = useState(null); // food chosen from search/scan
+  const [qtyMode, setQtyMode] = useState('serving'); // 'serving' | 'grams'
+  const [qty, setQty] = useState(1);
   const [weekData, setWeekData] = useState([]);
   const [range, setRange] = useState(7); // 7 or 30 days of history
 
@@ -67,9 +67,56 @@ export default function NutritionPage() {
   const addFood = async (food) => {
     await api.post(`/nutrition/${date}/food`, { ...food, mealType, time: new Date().toISOString() });
     fetchLog(date);
+    closeAdd();
+  };
+
+  const closeAdd = () => {
     setShowAdd(false);
     setSearch('');
+    setResults([]);
+    setSelected(null);
+    setSearchNote('');
+    setAddMode('search');
   };
+
+  // Debounced food search: built-in Indian foods + Open Food Facts
+  useEffect(() => {
+    if (!showAdd || addMode !== 'search') return undefined;
+    const q = search.trim();
+    if (q.length < 2) { setResults([]); setSearchNote(''); return undefined; }
+    setSearching(true);
+    const t = setTimeout(() => {
+      api.get('/foods/search', { params: { q } })
+        .then(r => {
+          setResults(r.data.results);
+          setSearchNote(r.data.remoteError ? 'Packaged-food search is offline; showing built-in foods only.' : '');
+        })
+        .catch(err => setSearchNote(err.response?.data?.message || 'Search failed'))
+        .finally(() => setSearching(false));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search, showAdd, addMode]);
+
+  const pickFood = (food) => {
+    setSelected(food);
+    setQtyMode('serving');
+    setQty(1);
+  };
+
+  const onBarcode = useCallback(async (code) => {
+    setSearchNote('');
+    try {
+      const { data } = await api.get(`/foods/barcode/${code}`);
+      pickFood(data);
+      setAddMode('search');
+    } catch (err) {
+      setAddMode('search');
+      setSearchNote(err.response?.data?.message || `No product found for ${code}.`);
+    }
+  }, []);
+
+  const selectedGrams = selected ? (qtyMode === 'serving' ? (+qty || 0) * selected.serving.grams : +qty || 0) : 0;
+  const preview = selected ? scaleFood(selected, selectedGrams) : null;
 
   const addCustom = async () => {
     if (!custom.name || !custom.calories) return;
@@ -82,7 +129,6 @@ export default function NutritionPage() {
     fetchLog(date);
   };
 
-  const filtered = FOOD_DB.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
   const calTarget = user?.dailyCalorieTarget || 2000;
   const totals = log?.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
   const remaining = calTarget - totals.calories;
@@ -226,11 +272,11 @@ export default function NutritionPage() {
 
       {/* Add Food Modal */}
       {showAdd && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowAdd(false)}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && closeAdd()}>
           <div className="modal">
             <div className="modal-head">
               <div className="modal-title">Log <span className="serif-it">food</span></div>
-              <button className="icon-btn" onClick={() => setShowAdd(false)} title="Close">
+              <button className="icon-btn" onClick={closeAdd} title="Close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>
@@ -246,24 +292,70 @@ export default function NutritionPage() {
 
             {/* Mode toggle */}
             <div className="seg" style={{ marginBottom: 16 }}>
-              {['search', 'custom'].map(m => (
-                <button key={m} className={addMode === m ? 'on' : ''} onClick={() => setAddMode(m)}>
-                  {m === 'search' ? 'Search foods' : 'Custom entry'}
+              {['search', 'scan', 'custom'].map(m => (
+                <button key={m} className={addMode === m ? 'on' : ''} onClick={() => { setAddMode(m); setSelected(null); }}>
+                  {m === 'search' ? 'Search' : m === 'scan' ? 'Scan barcode' : 'Custom'}
                 </button>
               ))}
             </div>
 
-            {addMode === 'search' ? (
+            {addMode === 'scan' ? (
+              <BarcodeScanner onDetected={onBarcode} onCancel={() => setAddMode('search')} />
+            ) : addMode === 'search' && selected ? (
+              <div className="food-pick">
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  {selected.image ? <img src={selected.image} alt="" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8, background: 'var(--bone)' }} /> : null}
+                  <div style={{ minWidth: 0 }}>
+                    <div className="t" style={{ fontWeight: 700 }}>{selected.name}</div>
+                    <div className="s mono muted" style={{ fontSize: 12 }}>
+                      {selected.brand ? `${selected.brand} · ` : ''}{selected.per100g.calories} kcal / 100 g
+                    </div>
+                  </div>
+                </div>
+                <div className="seg" style={{ marginTop: 12 }}>
+                  <button className={qtyMode === 'serving' ? 'on' : ''} onClick={() => { setQtyMode('serving'); setQty(1); }}>
+                    Servings ({selected.serving.label})
+                  </button>
+                  <button className={qtyMode === 'grams' ? 'on' : ''} onClick={() => { setQtyMode('grams'); setQty(selected.serving.grams); }}>Grams</button>
+                </div>
+                <div className="qty-row">
+                  <div className="input-affix">
+                    <input type="number" min="0" step={qtyMode === 'serving' ? 0.5 : 5} value={qty} onChange={e => setQty(e.target.value)} aria-label="Amount" />
+                    <span>{qtyMode === 'serving' ? '×' : 'g'}</span>
+                  </div>
+                  <span className="kc mono" style={{ fontWeight: 700 }}>{preview.calories} kcal</span>
+                </div>
+                <div className="s mono muted" style={{ fontSize: 12, marginTop: 8 }}>
+                  {Math.round(selectedGrams)} g · P {preview.protein}g · C {preview.carbs}g · F {preview.fat}g · Fib {preview.fiber}g
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                  <button className="btn ghost sm" onClick={() => setSelected(null)}>Back</button>
+                  <button className="btn primary sm" style={{ flex: 1 }} disabled={!selectedGrams} onClick={() => addFood(preview)}>
+                    Add to {mealType.replace('_', ' ')}
+                  </button>
+                </div>
+              </div>
+            ) : addMode === 'search' ? (
               <>
-                <input placeholder="Search foods…" value={search} onChange={e => setSearch(e.target.value)} style={{ marginBottom: 12 }} autoFocus />
+                <input placeholder="Search foods, e.g. paneer, dal, Maggi…" value={search} onChange={e => setSearch(e.target.value)} style={{ marginBottom: 12 }} autoFocus />
+                {searchNote && <p className="muted" style={{ fontSize: 12, marginBottom: 8 }}>{searchNote}</p>}
                 <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                  {(search ? filtered : FOOD_DB).map((f, i) => (
-                    <button key={i} className="line-item" style={{ width: '100%', textAlign: 'left', padding: '11px 6px' }} onClick={() => addFood(f)}>
-                      <div>
-                        <div className="t" style={{ fontWeight: 500 }}>{f.name}</div>
-                        <div className="s mono">P {f.protein}g · C {f.carbs}g · F {f.fat}g</div>
+                  {searching && !results.length && <p className="muted" style={{ fontSize: 13 }}>Searching…</p>}
+                  {!searching && search.trim().length >= 2 && !results.length && (
+                    <p className="muted" style={{ fontSize: 13 }}>No matches. Try another word, scan the barcode, or add it as a custom food.</p>
+                  )}
+                  {search.trim().length < 2 && (
+                    <p className="muted" style={{ fontSize: 13 }}>Type at least 2 letters. Home-cooked Indian dishes and packaged foods are both covered.</p>
+                  )}
+                  {results.map(f => (
+                    <button key={f.id} className="line-item" style={{ width: '100%', textAlign: 'left', padding: '11px 6px' }} onClick={() => pickFood(f)}>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="t" style={{ fontWeight: 500 }}>{f.name}{f.brand ? <span className="muted"> · {f.brand}</span> : null}</div>
+                        <div className="s mono">
+                          {f.serving.label} · P {Math.round(f.per100g.protein * f.serving.grams / 10) / 10}g · C {Math.round(f.per100g.carbs * f.serving.grams / 10) / 10}g · F {Math.round(f.per100g.fat * f.serving.grams / 10) / 10}g
+                        </div>
                       </div>
-                      <div className="end"><span className="kc" style={{ fontWeight: 700 }}>{f.calories}</span></div>
+                      <div className="end"><span className="kc" style={{ fontWeight: 700 }}>{Math.round(f.per100g.calories * f.serving.grams / 100)}</span></div>
                     </button>
                   ))}
                 </div>

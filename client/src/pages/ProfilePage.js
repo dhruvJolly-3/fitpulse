@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import RemindersCard from '../components/RemindersCard';
 import { useAuth, api } from '../context/AuthContext';
 
 export default function ProfilePage() {
@@ -225,6 +226,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <RemindersCard />
       </div>
     </div>
   );

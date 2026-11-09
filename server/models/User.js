@@ -42,7 +42,28 @@ const userSchema = new mongoose.Schema({
   stepTarget: { type: Number, default: 10000 },
   sleepTarget: { type: Number, default: 8 }, // hours
   appleHealthSync: { type: Boolean, default: false },
-  timezone: { type: String, default: 'Asia/Kolkata' }
+  timezone: { type: String, default: 'Asia/Kolkata' },
+  // Last on-device health sync from the mobile app (Health Connect / Apple Health)
+  healthSync: {
+    source: { type: String, enum: ['health_connect', 'apple_health'] },
+    lastSyncAt: Date,
+  },
+  // Smart reminder settings. Times are 'HH:mm' in the user's timezone.
+  reminders: {
+    enabled: { type: Boolean, default: false },
+    water: {
+      on: { type: Boolean, default: true },
+      everyHours: { type: Number, default: 2, min: 1, max: 6 },
+      from: { type: String, default: '09:00' },
+      to: { type: String, default: '21:00' },
+    },
+    workout: { on: { type: Boolean, default: true }, time: { type: String, default: '18:00' } },
+    meals: { on: { type: Boolean, default: true }, time: { type: String, default: '21:00' } },
+    sleep: { on: { type: Boolean, default: true }, time: { type: String, default: '22:30' } },
+    weighIn: { on: { type: Boolean, default: true }, time: { type: String, default: '08:00' } },
+  },
+  // Dedupe keys for reminders already sent, e.g. { water: '2026-11-09T11:00' }
+  reminderState: { type: Map, of: String, default: {} },
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
@@ -66,5 +87,32 @@ userSchema.methods.calculateTDEE = function() {
   const multipliers = { sedentary: 1.2, lightly_active: 1.375, moderately_active: 1.55, very_active: 1.725, extra_active: 1.9 };
   return Math.round(bmr * (multipliers[p.activityLevel] || 1.55));
 };
+
+// Recompute TDEE, calorie target and macro split from the current profile.
+// Called after a profile edit and after a new weigh-in changes body weight.
+userSchema.methods.applyTargets = function() {
+  const tdee = this.calculateTDEE();
+  if (!tdee) return;
+  this.tdee = tdee;
+  const goal = this.profile.goal;
+  this.dailyCalorieTarget = goal === 'lose_weight' ? tdee - 500
+    : goal === 'gain_muscle' ? tdee + 300 : tdee;
+  // Default macros (protein-forward): 30% protein, 40% carbs, 30% fat
+  const cals = this.dailyCalorieTarget;
+  this.macroTargets = {
+    protein: Math.round((cals * 0.30) / 4),
+    carbs: Math.round((cals * 0.40) / 4),
+    fat: Math.round((cals * 0.30) / 9),
+  };
+};
+
+// Never expose internals (password hash, reminder bookkeeping) in JSON responses
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.password;
+    delete ret.reminderState;
+    return ret;
+  },
+});
 
 module.exports = mongoose.model('User', userSchema);

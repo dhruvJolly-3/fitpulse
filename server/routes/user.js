@@ -8,7 +8,12 @@ const { validate } = require('../middleware/validate');
 // Only these fields can be changed through PUT /profile. Anything else in the
 // body (email, password, tdee, _id…) is ignored instead of blindly assigned.
 const PROFILE_FIELDS = ['age', 'gender', 'height', 'weight', 'targetWeight', 'activityLevel', 'dietType', 'goal', 'allergies'];
-const TARGET_FIELDS = ['waterTarget', 'stepTarget', 'sleepTarget'];
+const TARGET_FIELDS = ['waterTarget', 'stepTarget', 'sleepTarget', 'timezone'];
+
+// IANA zone check, e.g. 'Asia/Kolkata'. Reminders are scheduled in this zone.
+const isValidTimezone = (tz) => {
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; } catch { return false; }
+};
 
 const profileRules = [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty')
@@ -28,6 +33,7 @@ const profileRules = [
   body('waterTarget').optional().isInt({ min: 500, max: 10000 }).withMessage('Water target must be 500–10000 ml').toInt(),
   body('stepTarget').optional().isInt({ min: 1000, max: 100000 }).withMessage('Step goal must be 1,000–100,000').toInt(),
   body('sleepTarget').optional().isFloat({ min: 3, max: 14 }).withMessage('Sleep target must be 3–14 hours').toFloat(),
+  body('timezone').optional().custom(isValidTimezone).withMessage('Invalid timezone'),
 ];
 
 // Get profile
@@ -45,26 +51,9 @@ router.put('/profile', auth, validate(profileRules), asyncHandler(async (req, re
     PROFILE_FIELDS.forEach(f => { if (req.body.profile[f] !== undefined) user.profile[f] = req.body.profile[f]; });
   }
 
-  const tdee = user.calculateTDEE();
-  if (tdee) {
-    user.tdee = tdee;
-    // Adjust calorie target based on goal
-    const goal = user.profile.goal;
-    user.dailyCalorieTarget = goal === 'lose_weight' ? tdee - 500
-      : goal === 'gain_muscle' ? tdee + 300 : tdee;
-    // Default macros (protein-forward)
-    const cals = user.dailyCalorieTarget;
-    user.macroTargets = {
-      protein: Math.round((cals * 0.30) / 4),
-      carbs: Math.round((cals * 0.40) / 4),
-      fat: Math.round((cals * 0.30) / 9)
-    };
-  }
+  user.applyTargets();
   await user.save();
-
-  const updated = user.toObject();
-  delete updated.password; // never send the hash back
-  res.json(updated);
+  res.json(user); // toJSON strips the password hash
 }));
 
 // Get stats summary

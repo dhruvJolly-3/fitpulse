@@ -1,0 +1,89 @@
+{
+  "expo": {
+    "name": "FitPulse",
+    "slug": "fitpulse",
+    "scheme": "fitpulse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f1ebde"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dhruvjolly.fitpulse",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FitPulse uses the camera to scan food barcodes and take progress photos.",
+        "NSPhotoLibraryUsageDescription": "FitPulse lets you pick progress photos from your library."
+      }
+    },
+    "android": {
+      "package": "com.dhruvjolly.fitpulse",
+      "adaptiveIcon": {
+        "backgroundColor": "#f1ebde",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_EXERCISE",
+        "android.permission.health.READ_WEIGHT"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FitPulse uses the camera to scan food barcodes and take progress photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitPulse lets you pick progress photos from your library."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#c9e265"
+        }
+      ],
+      "expo-health-connect",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "FitPulse reads your steps, sleep, workouts and weight to fill in your daily logs.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      "expo-router"
+    ],
+    "extra": {
+      "apiUrl": "https://fitpulse-psmj.onrender.com"
+    }
+  }
+}
